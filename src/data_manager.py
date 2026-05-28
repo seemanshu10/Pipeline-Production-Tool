@@ -80,7 +80,8 @@ class DataManager:
     
     def create_project(self, name: str, supervisor_name: str = "", department: str = "Rig", 
                       project_type: str = "VFX", needs_daily_review: bool = False,
-                      client_delivery: bool = False, high_priority: bool = False) -> Project:
+                      client_delivery: bool = False, high_priority: bool = False,
+                      priority: int = 50, timeline_offset: int = 25, completion: int = 25) -> Project:
         """Create a new project"""
         project_id = f"proj_{uuid.uuid4().hex[:8]}"
         project = Project(
@@ -91,7 +92,10 @@ class DataManager:
             project_type=project_type,
             needs_daily_review=needs_daily_review,
             client_delivery=client_delivery,
-            high_priority=high_priority
+            high_priority=high_priority,
+            priority=priority,
+            timeline_offset=timeline_offset,
+            completion=completion
         )
         self.data["projects"].append(project.to_dict())
         self.save()

@@ -4,7 +4,8 @@ from PySide2.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget,
     QListWidgetItem, QLabel, QInputDialog, QMessageBox, QSplitter,
     QGroupBox, QFormLayout, QLineEdit, QComboBox, QRadioButton,
-    QCheckBox, QButtonGroup, QScrollArea
+    QCheckBox, QButtonGroup, QScrollArea, QSlider, QScrollBar, QProgressBar,
+    QTextEdit, QGridLayout
 )
 from PySide2.QtCore import Qt
 
@@ -26,23 +27,9 @@ class PlannerTab(QWidget):
         """Initialize the UI"""
         layout = QHBoxLayout()
         
-        # Left panel - Projects and details
+        # Left panel - Details, Project Type, Flags, Priority/Timeline
         left_layout = QVBoxLayout()
-        left_layout.addWidget(QLabel("Projects:"))
-        
-        self.projects_list = QListWidget()
-        self.projects_list.itemSelectionChanged.connect(self.on_project_selected)
-        left_layout.addWidget(self.projects_list)
-        
-        projects_btn_layout = QHBoxLayout()
-        new_project_btn = QPushButton("New Project")
-        new_project_btn.clicked.connect(self.create_project)
-        delete_project_btn = QPushButton("Delete Project")
-        delete_project_btn.clicked.connect(self.delete_project)
-        projects_btn_layout.addWidget(new_project_btn)
-        projects_btn_layout.addWidget(delete_project_btn)
-        left_layout.addLayout(projects_btn_layout)
-        
+
         # Project Details Group
         details_group = QGroupBox("Project Details")
         details_layout = QFormLayout()
@@ -86,7 +73,7 @@ class PlannerTab(QWidget):
         left_layout.addWidget(project_type_group)
         
         # Flags Group
-        flags_group = QGroupBox("Flags")
+        flags_group = QGroupBox("Project Flags")
         flags_layout = QVBoxLayout()
         
         self.needs_daily_review_checkbox = QCheckBox("Needs daily Review")
@@ -99,24 +86,121 @@ class PlannerTab(QWidget):
         flags_group.setLayout(flags_layout)
         left_layout.addWidget(flags_group)
         
+        # Priority and Timeline Group (new)
+        priority_group = QGroupBox("Priority and Timeline")
+        priority_layout = QVBoxLayout()
+
+        # Priority slider (0-100)
+        priority_row = QHBoxLayout()
+        self.priority_slider = QSlider(Qt.Horizontal)
+        self.priority_slider.setMinimum(0)
+        self.priority_slider.setMaximum(100)
+        self.priority_slider.setValue(50)
+        self.priority_value_label = QLabel("50")
+        self.priority_slider.valueChanged.connect(lambda v: self.priority_value_label.setText(str(v)))
+        priority_row.addWidget(QLabel("Priority:"))
+        priority_row.addWidget(self.priority_slider)
+        priority_row.addWidget(self.priority_value_label)
+        priority_layout.addLayout(priority_row)
+
+        # Timeline offset scrollbar (0-100)
+        timeline_row = QHBoxLayout()
+        self.timeline_scroll = QScrollBar(Qt.Horizontal)
+        self.timeline_scroll.setMinimum(0)
+        self.timeline_scroll.setMaximum(100)
+        self.timeline_scroll.setValue(25)
+        self.timeline_value_label = QLabel("25")
+        self.timeline_scroll.valueChanged.connect(lambda v: self.timeline_value_label.setText(str(v)))
+        timeline_row.addWidget(QLabel("Timeline Offset:"))
+        timeline_row.addWidget(self.timeline_scroll)
+        timeline_row.addWidget(self.timeline_value_label)
+        priority_layout.addLayout(timeline_row)
+
+        # Completion slider + progress bar (0-100)
+        completion_row = QHBoxLayout()
+        self.completion_slider = QSlider(Qt.Horizontal)
+        self.completion_slider.setMinimum(0)
+        self.completion_slider.setMaximum(100)
+        self.completion_slider.setValue(25)
+        self.completion_progress = QProgressBar()
+        self.completion_progress.setMinimum(0)
+        self.completion_progress.setMaximum(100)
+        self.completion_progress.setValue(25)
+        self.completion_value_label = QLabel("25")
+        self.completion_slider.valueChanged.connect(
+            lambda v: [self.completion_progress.setValue(v), self.completion_value_label.setText(str(v))]
+        )
+        completion_row.addWidget(QLabel("Completion:"))
+        completion_row.addWidget(self.completion_slider)
+        completion_row.addWidget(self.completion_progress)
+        completion_row.addWidget(self.completion_value_label)
+        priority_layout.addLayout(completion_row)
+
+        priority_group.setLayout(priority_layout)
+        left_layout.addWidget(priority_group)
+
+        # Actions group — 2×2 grid
+        actions_group = QGroupBox("Actions")
+        actions_grid = QGridLayout()
+
+        add_task_btn = QPushButton("Add Task")
+        add_task_btn.clicked.connect(self.create_task)
+        remove_task_btn = QPushButton("Remove Task")
+        remove_task_btn.clicked.connect(self.delete_task)
+        mark_done_btn = QPushButton("Mark Done")
+        mark_done_btn.clicked.connect(self.mark_task_done)
+        clear_notes_btn = QPushButton("Clear Notes")
+        clear_notes_btn.clicked.connect(self.clear_notes)
+
+        actions_grid.addWidget(add_task_btn,    0, 0)
+        actions_grid.addWidget(remove_task_btn, 0, 1)
+        actions_grid.addWidget(mark_done_btn,   1, 0)
+        actions_grid.addWidget(clear_notes_btn, 1, 1)
+
+        actions_group.setLayout(actions_grid)
+        left_layout.addWidget(actions_group)
+
+        # Save Changes button
+        self.save_btn = QPushButton("Save Changes")
+        self.save_btn.clicked.connect(self.save_project_details)
+        self.save_btn.setEnabled(False)
+        left_layout.addWidget(self.save_btn)
+
         # Add stretch to push everything to top
         left_layout.addStretch()
         
-        # Right panel - Tasks
+        # Right panel - Projects and Tasks
         right_layout = QVBoxLayout()
+        # Project Notes
+        notes_group = QGroupBox("Project Notes")
+        notes_layout = QVBoxLayout()
+        self.project_notes = QTextEdit()
+        self.project_notes.setPlaceholderText("Enter project notes here...")
+        notes_layout.addWidget(self.project_notes)
+        notes_group.setLayout(notes_layout)
+        right_layout.addWidget(notes_group)
+        right_layout.addWidget(QLabel("Projects:"))
+
+        self.projects_list = QListWidget()
+        self.projects_list.itemSelectionChanged.connect(self.on_project_selected)
+        right_layout.addWidget(self.projects_list)
+
+        projects_btn_layout = QHBoxLayout()
+        new_project_btn = QPushButton("New Project")
+        new_project_btn.clicked.connect(self.create_project)
+        delete_project_btn = QPushButton("Delete Project")
+        delete_project_btn.clicked.connect(self.delete_project)
+        projects_btn_layout.addWidget(new_project_btn)
+        projects_btn_layout.addWidget(delete_project_btn)
+        right_layout.addLayout(projects_btn_layout)
+
+        # Separator to tasks
         right_layout.addWidget(QLabel("Tasks:"))
-        
+
         self.tasks_list = QListWidget()
         right_layout.addWidget(self.tasks_list)
+
         
-        tasks_btn_layout = QHBoxLayout()
-        new_task_btn = QPushButton("New Task")
-        new_task_btn.clicked.connect(self.create_task)
-        delete_task_btn = QPushButton("Delete Task")
-        delete_task_btn.clicked.connect(self.delete_task)
-        tasks_btn_layout.addWidget(new_task_btn)
-        tasks_btn_layout.addWidget(delete_task_btn)
-        right_layout.addLayout(tasks_btn_layout)
         
         # Create splitter
         splitter = QSplitter(Qt.Horizontal)
@@ -204,7 +288,10 @@ class PlannerTab(QWidget):
         
         self.data_manager.create_project(
             name, supervisor_name, department,
-            project_type, needs_daily_review, client_delivery, high_priority
+            project_type, needs_daily_review, client_delivery, high_priority,
+            priority=self.priority_slider.value(),
+            timeline_offset=self.timeline_scroll.value(),
+            completion=self.completion_slider.value()
         )
         self.refresh_projects()
         self.clear_project_details()
@@ -264,7 +351,7 @@ class PlannerTab(QWidget):
         if not self.current_project_id:
             return
         
-        project = self.data_manager.get_project(self.current_project_id)
+        project = self.data_manager.get_project_by_id(self.current_project_id)
         if project:
             self.project_name_input.setText(project.name)
             self.supervisor_name_input.setText(project.supervisor_name)
@@ -282,6 +369,13 @@ class PlannerTab(QWidget):
             self.needs_daily_review_checkbox.setChecked(project.needs_daily_review)
             self.client_delivery_checkbox.setChecked(project.client_delivery)
             self.high_priority_checkbox.setChecked(project.high_priority)
+
+            # Load priority/timeline/completion controls
+            self.priority_slider.setValue(project.priority)
+            self.timeline_scroll.setValue(project.timeline_offset)
+            self.completion_slider.setValue(project.completion)
+            self.project_notes.setPlainText(project.notes)
+            self.save_btn.setEnabled(True)
     
     def clear_project_details(self):
         """Clear project details form fields"""
@@ -293,3 +387,74 @@ class PlannerTab(QWidget):
         self.client_delivery_checkbox.setChecked(False)
         self.high_priority_checkbox.setChecked(False)
         self.department_combo.setCurrentIndex(0)
+        self.priority_slider.setValue(50)
+        self.timeline_scroll.setValue(25)
+        self.completion_slider.setValue(25)
+        self.project_notes.clear()
+        self.save_btn.setEnabled(False)
+
+    def save_project_details(self):
+        """Persist current form values to the selected project"""
+        if not self.current_project_id:
+            return
+
+        project = self.data_manager.get_project_by_id(self.current_project_id)
+        if not project:
+            return
+
+        name = self.project_name_input.text().strip()
+        if not name:
+            QMessageBox.warning(self, "Warning", "Project name cannot be empty.")
+            return
+
+        project.name = name
+        project.supervisor_name = self.supervisor_name_input.text().strip()
+        project.department = self.department_combo.currentText()
+
+        if self.animation_radio.isChecked():
+            project.project_type = "Animation"
+        elif self.gaming_radio.isChecked():
+            project.project_type = "Gaming"
+        else:
+            project.project_type = "VFX"
+
+        project.needs_daily_review = self.needs_daily_review_checkbox.isChecked()
+        project.client_delivery = self.client_delivery_checkbox.isChecked()
+        project.high_priority = self.high_priority_checkbox.isChecked()
+        project.priority = self.priority_slider.value()
+        project.timeline_offset = self.timeline_scroll.value()
+        project.completion = self.completion_slider.value()
+        project.notes = self.project_notes.toPlainText()
+
+        self.data_manager.update_project(project)
+        self.refresh_projects()
+
+        if self.parent_window:
+            self.parent_window.statusBar().showMessage("Project saved.", 3000)
+
+    def mark_task_done(self):
+        """Mark the selected task as done"""
+        if not self.current_project_id:
+            QMessageBox.warning(self, "Warning", "Please select a project first.")
+            return
+
+        selected_items = self.tasks_list.selectedItems()
+        if not selected_items:
+            QMessageBox.warning(self, "Warning", "Please select a task to mark as done.")
+            return
+
+        task_id = selected_items[0].data(Qt.UserRole)
+        project = self.data_manager.get_project_by_id(self.current_project_id)
+        if not project:
+            return
+
+        for task in project.tasks:
+            if task.id == task_id:
+                task.status = "done"
+                self.data_manager.update_task(self.current_project_id, task)
+                self.refresh_tasks()
+                break
+
+    def clear_notes(self):
+        """Clear the project notes text field"""
+        self.project_notes.clear()
