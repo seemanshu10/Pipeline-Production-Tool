@@ -20,6 +20,7 @@ class PlannerTab(QWidget):
         self.data_manager = data_manager
         self.parent_window = parent
         self.current_project_id = None
+        self._pre_completion_statuses: dict = {}  # task_id -> status before slider hit 100
         self.init_ui()
         self.refresh()
     
@@ -98,6 +99,7 @@ class PlannerTab(QWidget):
         self.priority_slider.setValue(50)
         self.priority_value_label = QLabel("50")
         self.priority_slider.valueChanged.connect(lambda v: self.priority_value_label.setText(str(v)))
+        self.priority_slider.sliderReleased.connect(self._auto_save_priority)
         priority_row.addWidget(QLabel("Priority:"))
         priority_row.addWidget(self.priority_slider)
         priority_row.addWidget(self.priority_value_label)
@@ -111,6 +113,7 @@ class PlannerTab(QWidget):
         self.timeline_scroll.setValue(25)
         self.timeline_value_label = QLabel("25")
         self.timeline_scroll.valueChanged.connect(lambda v: self.timeline_value_label.setText(str(v)))
+        self.timeline_scroll.sliderReleased.connect(self._auto_save_timeline)
         timeline_row.addWidget(QLabel("Timeline Offset:"))
         timeline_row.addWidget(self.timeline_scroll)
         timeline_row.addWidget(self.timeline_value_label)
@@ -130,6 +133,7 @@ class PlannerTab(QWidget):
         self.completion_slider.valueChanged.connect(
             lambda v: [self.completion_progress.setValue(v), self.completion_value_label.setText(str(v))]
         )
+        self.completion_slider.sliderReleased.connect(self._on_completion_released)
         completion_row.addWidget(QLabel("Completion:"))
         completion_row.addWidget(self.completion_slider)
         completion_row.addWidget(self.completion_progress)
@@ -362,9 +366,10 @@ class PlannerTab(QWidget):
         """Load project details into form fields"""
         if not self.current_project_id:
             return
-        
         project = self.data_manager.get_project_by_id(self.current_project_id)
         if project:
+            # Snapshot task statuses so the completion slider can restore them
+            self._pre_completion_statuses = {t.id: t.status for t in project.tasks}
             self.project_name_input.setText(project.name)
             self.supervisor_name_input.setText(project.supervisor_name)
             self.department_combo.setCurrentText(project.department)
@@ -382,10 +387,14 @@ class PlannerTab(QWidget):
             self.client_delivery_checkbox.setChecked(project.client_delivery)
             self.high_priority_checkbox.setChecked(project.high_priority)
 
-            # Load priority/timeline/completion controls
+            # Load priority/timeline/completion — block signals to avoid spurious auto-saves on load
+            for _w in (self.priority_slider, self.timeline_scroll, self.completion_slider):
+                _w.blockSignals(True)
             self.priority_slider.setValue(project.priority)
             self.timeline_scroll.setValue(project.timeline_offset)
             self.completion_slider.setValue(project.completion)
+            for _w in (self.priority_slider, self.timeline_scroll, self.completion_slider):
+                _w.blockSignals(False)
             self.project_notes.setPlainText(project.notes)
             self.save_btn.setEnabled(True)
     
@@ -462,6 +471,7 @@ class PlannerTab(QWidget):
         for task in project.tasks:
             if task.id == task_id:
                 task.status = "done"
+                self._pre_completion_statuses[task_id] = "done"
                 self.data_manager.update_task(self.current_project_id, task)
                 self.refresh_tasks()
                 self._set_status(f"Task '{task.name}' marked as done.")
@@ -471,6 +481,46 @@ class PlannerTab(QWidget):
         """Clear the project notes text field"""
         self.project_notes.clear()
         self._set_status("Notes cleared.")
+
+    def _auto_save_priority(self):
+        if not self.current_project_id:
+            return
+        project = self.data_manager.get_project_by_id(self.current_project_id)
+        if project:
+            project.priority = self.priority_slider.value()
+            self.data_manager.update_project(project)
+            self._set_status(f"Priority set to {project.priority}.")
+
+    def _auto_save_timeline(self):
+        if not self.current_project_id:
+            return
+        project = self.data_manager.get_project_by_id(self.current_project_id)
+        if project:
+            project.timeline_offset = self.timeline_scroll.value()
+            self.data_manager.update_project(project)
+            self._set_status(f"Timeline offset set to {project.timeline_offset}.")
+
+    def _on_completion_released(self):
+        if not self.current_project_id:
+            return
+        project = self.data_manager.get_project_by_id(self.current_project_id)
+        if not project:
+            return
+        project.completion = self.completion_slider.value()
+        if project.completion == 100:
+            for task in project.tasks:
+                task.status = "done"
+            self.data_manager.update_project(project)
+            self.refresh_tasks()
+            self._set_status("All tasks marked as done — project 100% complete.")
+        else:
+            if self._pre_completion_statuses:
+                for task in project.tasks:
+                    if task.id in self._pre_completion_statuses:
+                        task.status = self._pre_completion_statuses[task.id]
+            self.data_manager.update_project(project)
+            self.refresh_tasks()
+            self._set_status(f"Completion set to {project.completion}%.")
 
     def _set_status(self, message: str, timeout: int = 3000):
         if self.parent_window:

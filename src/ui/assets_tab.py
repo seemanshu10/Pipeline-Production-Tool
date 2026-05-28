@@ -70,7 +70,8 @@ class AssetsTab(QWidget):
         self.tree_toggle_btn = QPushButton("Collapse All")
         self.tree_toggle_btn.setCheckable(True)
         self.tree_toggle_btn.setChecked(True)   # tree starts expanded
-        self.tree_toggle_btn.setFixedHeight(28)
+        self.tree_toggle_btn.setFixedHeight(36)
+        self.tree_toggle_btn.setMinimumWidth(120)
         self.tree_toggle_btn.toggled.connect(self._on_tree_toggle)
         tree_toolbar.addStretch()
         tree_toolbar.addWidget(self.tree_toggle_btn)
