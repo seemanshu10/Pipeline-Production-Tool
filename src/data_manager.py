@@ -61,6 +61,28 @@ class DataManager:
     def save(self):
         """Save current data to file"""
         self._save_data()
+
+    def load_from_file(self, path: str) -> bool:
+        """Replace in-memory data with contents of an arbitrary JSON file."""
+        try:
+            with open(path, 'r') as f:
+                data = json.load(f)
+            self.data = data
+            self.data_file = path
+            return True
+        except (json.JSONDecodeError, IOError) as e:
+            print(f"Error loading {path}: {e}")
+            return False
+
+    def save_to_file(self, path: str) -> bool:
+        """Write current in-memory data to an arbitrary file path."""
+        try:
+            with open(path, 'w') as f:
+                json.dump(self.data, f, indent=2)
+            return True
+        except IOError as e:
+            print(f"Error saving to {path}: {e}")
+            return False
     
     # ==================== PROJECT METHODS ====================
     

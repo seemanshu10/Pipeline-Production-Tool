@@ -1,9 +1,9 @@
 """Assets tab - Published Assets, Shot Tracking, Department Hierarchy"""
 
 from PySide2.QtWidgets import (
-    QWidget, QVBoxLayout, QSplitter, QGroupBox,
+    QWidget, QVBoxLayout, QHBoxLayout, QSplitter, QGroupBox,
     QListView, QTableView, QTreeWidget, QTreeWidgetItem,
-    QHeaderView, QAbstractItemView
+    QHeaderView, QAbstractItemView, QPushButton
 )
 from PySide2.QtCore import Qt
 
@@ -17,7 +17,9 @@ class AssetsTab(QWidget):
     def __init__(self, data_manager: DataManager, parent=None):
         super().__init__(parent)
         self.data_manager = data_manager
+        self.parent_window = parent
         self.init_ui()
+        self._connect_signals()
         self.refresh()
 
     def init_ui(self):
@@ -63,6 +65,17 @@ class AssetsTab(QWidget):
         dept_group = QGroupBox("Department Hierarchy")
         dept_layout = QVBoxLayout()
 
+        # Toggle button row
+        tree_toolbar = QHBoxLayout()
+        self.tree_toggle_btn = QPushButton("Collapse All")
+        self.tree_toggle_btn.setCheckable(True)
+        self.tree_toggle_btn.setChecked(True)   # tree starts expanded
+        self.tree_toggle_btn.setFixedHeight(28)
+        self.tree_toggle_btn.toggled.connect(self._on_tree_toggle)
+        tree_toolbar.addStretch()
+        tree_toolbar.addWidget(self.tree_toggle_btn)
+        dept_layout.addLayout(tree_toolbar)
+
         self.dept_tree = QTreeWidget()
         self.dept_tree.setHeaderLabel("Pipeline Departments")
         self.dept_tree.setAnimated(True)
@@ -82,6 +95,50 @@ class AssetsTab(QWidget):
 
         layout.addWidget(splitter)
         self.setLayout(layout)
+
+    def _connect_signals(self):
+        self.asset_list_view.selectionModel().selectionChanged.connect(
+            self.on_asset_selection_changed
+        )
+        self.shot_table_view.selectionModel().selectionChanged.connect(
+            self.on_shot_selection_changed
+        )
+
+    def on_asset_selection_changed(self, selected, deselected):
+        indexes = selected.indexes()
+        if not indexes:
+            if self.parent_window:
+                self.parent_window.statusBar().clearMessage()
+            return
+        display = self.asset_list_model.data(indexes[0], Qt.DisplayRole)
+        if self.parent_window:
+            self.parent_window.statusBar().showMessage(f"Asset:  {display}")
+
+    def on_shot_selection_changed(self, selected, deselected):
+        indexes = selected.indexes()
+        if not indexes:
+            if self.parent_window:
+                self.parent_window.statusBar().clearMessage()
+            return
+        row = indexes[0].row()
+        m = self.shot_table_model
+        shot   = m.data(m.index(row, 0))
+        dept   = m.data(m.index(row, 1))
+        status = m.data(m.index(row, 2))
+        due    = m.data(m.index(row, 3))
+        if self.parent_window:
+            self.parent_window.statusBar().showMessage(
+                f"Shot: {shot}  |  Dept: {dept}  |  Status: {status}  |  Due: {due}"
+            )
+
+    def _on_tree_toggle(self, checked: bool):
+        if checked:
+            self.dept_tree.expandAll()
+            self.tree_toggle_btn.setText("Collapse All")
+        else:
+            self.dept_tree.collapseAll()
+            self.tree_toggle_btn.setText("Expand All")
+      
 
     def _populate_department_tree(self):
         self.dept_tree.clear()

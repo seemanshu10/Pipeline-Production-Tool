@@ -1,7 +1,7 @@
 """Main window with tab widget"""
 
-from PySide2.QtWidgets import (QMainWindow, QTabWidget, QVBoxLayout, QWidget, 
-                               QMenuBar, QMenu, QMessageBox)
+from PySide2.QtWidgets import (QMainWindow, QTabWidget, QVBoxLayout, QWidget,
+                               QMenuBar, QMenu, QMessageBox, QFileDialog)
 from PySide2.QtCore import Qt
 from PySide2.QtGui import QKeySequence
 
@@ -38,6 +38,7 @@ class MainWindow(QMainWindow):
         
         # Create tab widget
         self.tabs = QTabWidget()
+        self.tabs.tabBar().setExpanding(True)
         layout.addWidget(self.tabs)
         
         # Create and add tabs
@@ -66,35 +67,74 @@ class MainWindow(QMainWindow):
     def create_menu_bar(self):
         """Create and setup menu bar with File and Help menus"""
         menubar = self.menuBar()
-        
+
         # File Menu
         file_menu = menubar.addMenu("File")
-        
-        # New action
+
         new_action = file_menu.addAction("New Project")
-        new_action.setShortcut(QKeySequence.New)  # Ctrl+N
+        new_action.setShortcut(QKeySequence.New)          # Ctrl+N
         new_action.triggered.connect(self.new_project)
-        
-        # Separator
+
         file_menu.addSeparator()
-        
-        # Exit action
+
+        open_action = file_menu.addAction("Open Project...")
+        open_action.setShortcut(QKeySequence.Open)        # Ctrl+O
+        open_action.triggered.connect(self.open_project_file)
+
+        save_action = file_menu.addAction("Save Project...")
+        save_action.setShortcut(QKeySequence.Save)        # Ctrl+S
+        save_action.triggered.connect(self.save_project_file)
+
+        file_menu.addSeparator()
+
         exit_action = file_menu.addAction("Exit")
-        exit_action.setShortcut(QKeySequence.Quit)  # Ctrl+Q
+        exit_action.setShortcut(QKeySequence.Quit)        # Ctrl+Q
         exit_action.triggered.connect(self.close)
-        
+
         # Help/About Menu
         help_menu = menubar.addMenu("Help")
-        
-        # About action
+
         about_action = help_menu.addAction("About")
         about_action.setShortcut(QKeySequence("F1"))
         about_action.triggered.connect(self.show_about)
-    
+
     def new_project(self):
-        """Handle new project action"""
-        self.statusBar().showMessage("Create new project - Switch to Planner tab")
-        self.tabs.setCurrentIndex(0)  # Switch to Planner tab
+        """Reset planner form and switch to Planner tab ready for a new entry."""
+        self.tabs.setCurrentIndex(0)
+        self.planner_tab.projects_list.clearSelection()
+        self.planner_tab.clear_project_details()
+        self.statusBar().showMessage("Fill in the details and click 'New Project'.", 4000)
+
+    def open_project_file(self):
+        """Open a JSON pipeline file and replace the current session data."""
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Open Project File", "",
+            "JSON Files (*.json);;All Files (*)"
+        )
+        if not path:
+            return
+        ok = self.data_manager.load_from_file(path)
+        if ok:
+            self.refresh_all()
+            self.statusBar().showMessage(f"Loaded: {path}", 5000)
+        else:
+            QMessageBox.critical(self, "Open Error", f"Could not load file:\n{path}")
+
+    def save_project_file(self):
+        """Save the current session data to a user-chosen JSON file."""
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save Project File", "",
+            "JSON Files (*.json);;All Files (*)"
+        )
+        if not path:
+            return
+        if not path.endswith(".json"):
+            path += ".json"
+        ok = self.data_manager.save_to_file(path)
+        if ok:
+            self.statusBar().showMessage(f"Saved: {path}", 5000)
+        else:
+            QMessageBox.critical(self, "Save Error", f"Could not save file:\n{path}")
     
     def show_about(self):
         """Show about dialog"""

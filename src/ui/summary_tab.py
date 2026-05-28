@@ -1,6 +1,11 @@
 """Summary tab - Statistics and overview"""
 
-from PySide2.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox, QGridLayout
+import json
+from datetime import datetime
+from PySide2.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox,
+    QGridLayout, QPushButton, QFileDialog, QMessageBox
+)
 from PySide2.QtCore import Qt
 from PySide2.QtGui import QFont
 
@@ -76,15 +81,97 @@ class SummaryTab(QWidget):
         layout.addWidget(assets_group)
         
         layout.addStretch()
+
+        # Export group
+        export_group = QGroupBox("Export")
+        export_layout = QHBoxLayout()
+
+        self.export_btn = QPushButton("Export Summary as JSON")
+        self.export_btn.setFixedHeight(36)
+        self.export_btn.clicked.connect(self.export_summary)
+        export_layout.addWidget(self.export_btn)
+        export_layout.addStretch()
+        export_group.setLayout(export_layout)
+        layout.addWidget(export_group)
+
         self.setLayout(layout)
-    
+
     def refresh(self):
         """Refresh statistics from data manager"""
         stats = self.data_manager.get_statistics()
-        
+
         self.total_projects_label.setText(str(stats["total_projects"]))
         self.total_tasks_label.setText(str(stats["total_tasks"]))
         self.pending_tasks_label.setText(str(stats["pending_tasks"]))
         self.in_progress_tasks_label.setText(str(stats["in_progress_tasks"]))
         self.completed_tasks_label.setText(str(stats["completed_tasks"]))
         self.total_assets_label.setText(str(stats["total_assets"]))
+
+    def export_summary(self):
+        """Export full project summary to a user-chosen JSON file."""
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export Summary", "pipeline_summary.json",
+            "JSON Files (*.json);;All Files (*)"
+        )
+        if not path:
+            return
+        if not path.endswith(".json"):
+            path += ".json"
+
+        projects = self.data_manager.get_all_projects()
+        assets = self.data_manager.get_all_assets()
+        stats = self.data_manager.get_statistics()
+
+        summary = {
+            "exported_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "statistics": stats,
+            "projects": [
+                {
+                    "id": p.id,
+                    "name": p.name,
+                    "supervisor": p.supervisor_name,
+                    "department": p.department,
+                    "project_type": p.project_type,
+                    "priority": p.priority,
+                    "completion": p.completion,
+                    "timeline_offset": p.timeline_offset,
+                    "flags": {
+                        "needs_daily_review": p.needs_daily_review,
+                        "client_delivery": p.client_delivery,
+                        "high_priority": p.high_priority,
+                    },
+                    "notes": p.notes,
+                    "created_date": p.created_date,
+                    "tasks": [
+                        {
+                            "id": t.id,
+                            "name": t.name,
+                            "status": t.status,
+                            "priority": t.priority,
+                            "created_date": t.created_date,
+                        }
+                        for t in p.tasks
+                    ],
+                }
+                for p in projects
+            ],
+            "assets": [
+                {
+                    "id": a.id,
+                    "name": a.name,
+                    "type": a.asset_type,
+                    "created_date": a.created_date,
+                }
+                for a in assets
+            ],
+        }
+
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(summary, f, indent=2)
+            if self.parent_window:
+                self.parent_window.statusBar().showMessage(
+                    f"Summary exported: {path}", 5000
+                )
+        except OSError as e:
+            QMessageBox.critical(self, "Export Error", f"Could not write file:\n{e}")

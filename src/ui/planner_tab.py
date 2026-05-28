@@ -237,15 +237,19 @@ class PlannerTab(QWidget):
     def refresh_tasks(self):
         """Refresh tasks list for current project"""
         self.tasks_list.clear()
-        
+
         if not self.current_project_id:
             return
-        
-        tasks = self.data_manager.get_tasks_for_project(self.current_project_id)
-        
-        for task in tasks:
-            status_str = f" [{task.status}]"
-            item_text = f"{task.name}{status_str}"
+
+        project = self.data_manager.get_project_by_id(self.current_project_id)
+        if not project:
+            return
+
+        for task in project.tasks:
+            item_text = (
+                f"{project.name}  |  {project.department}  |  "
+                f"{task.name}  |  {task.status}"
+            )
             item = QListWidgetItem(item_text)
             item.setData(Qt.UserRole, task.id)
             self.tasks_list.addItem(item)
@@ -257,10 +261,12 @@ class PlannerTab(QWidget):
             self.current_project_id = selected_items[0].data(Qt.UserRole)
             self.refresh_tasks()
             self.load_project_details()
+            self._set_status(f"Project '{selected_items[0].text()}' selected.")
         else:
             self.current_project_id = None
             self.tasks_list.clear()
             self.clear_project_details()
+            self._set_status("No project selected.")
     
     def create_project(self):
         """Create a new project"""
@@ -295,6 +301,7 @@ class PlannerTab(QWidget):
         )
         self.refresh_projects()
         self.clear_project_details()
+        self._set_status(f"Project '{name}' created.")
     
     def delete_project(self):
         """Delete selected project"""
@@ -312,9 +319,11 @@ class PlannerTab(QWidget):
         )
         
         if reply == QMessageBox.Yes:
+            project_name = selected_items[0].text()
             self.data_manager.delete_project(project_id)
             self.current_project_id = None
             self.refresh()
+            self._set_status(f"Project '{project_name}' deleted.")
     
     def create_task(self):
         """Create a new task in selected project"""
@@ -326,6 +335,7 @@ class PlannerTab(QWidget):
         if ok and name:
             self.data_manager.create_task(self.current_project_id, name)
             self.refresh_tasks()
+            self._set_status(f"Task '{name}' created.")
     
     def delete_task(self):
         """Delete selected task"""
@@ -335,16 +345,18 @@ class PlannerTab(QWidget):
             return
         
         task_id = selected_items[0].data(Qt.UserRole)
-        
+        task_name = selected_items[0].text().split("  |  ")[2]
+
         reply = QMessageBox.question(
             self, "Confirm Delete",
             "Are you sure you want to delete this task?",
             QMessageBox.Yes | QMessageBox.No
         )
-        
+
         if reply == QMessageBox.Yes:
             self.data_manager.delete_task(self.current_project_id, task_id)
             self.refresh_tasks()
+            self._set_status(f"Task '{task_name}' deleted.")
     
     def load_project_details(self):
         """Load project details into form fields"""
@@ -429,8 +441,7 @@ class PlannerTab(QWidget):
         self.data_manager.update_project(project)
         self.refresh_projects()
 
-        if self.parent_window:
-            self.parent_window.statusBar().showMessage("Project saved.", 3000)
+        self._set_status(f"Project '{name}' saved.")
 
     def mark_task_done(self):
         """Mark the selected task as done"""
@@ -453,8 +464,14 @@ class PlannerTab(QWidget):
                 task.status = "done"
                 self.data_manager.update_task(self.current_project_id, task)
                 self.refresh_tasks()
+                self._set_status(f"Task '{task.name}' marked as done.")
                 break
 
     def clear_notes(self):
         """Clear the project notes text field"""
         self.project_notes.clear()
+        self._set_status("Notes cleared.")
+
+    def _set_status(self, message: str, timeout: int = 3000):
+        if self.parent_window:
+            self.parent_window.statusBar().showMessage(message, timeout)
