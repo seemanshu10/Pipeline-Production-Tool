@@ -92,7 +92,7 @@ class AssetsTab(QWidget):
         splitter.addWidget(assets_group)
         splitter.addWidget(shots_group)
         splitter.addWidget(dept_group)
-        splitter.setSizes([280, 420, 300])
+        splitter.setSizes([100, 420, 300])
 
         layout.addWidget(splitter)
         self.setLayout(layout)
@@ -160,3 +160,6 @@ class AssetsTab(QWidget):
     def refresh(self):
         assets = self.data_manager.get_all_assets()
         self.asset_list_model.refresh(assets)
+
+        shots = self.data_manager.get_all_shots()
+        self.shot_table_model.refresh([s.to_dict() for s in shots])

@@ -22,7 +22,7 @@ class MainWindow(QMainWindow):
         
         # Set window properties
         self.setWindowTitle("VFX Pipeline Production Tool")
-        self.setGeometry(100, 100, 900, 700)
+        self.setGeometry(100, 100, 1200, 1000)
         
         # Create menu bar
         self.create_menu_bar()
@@ -55,7 +55,9 @@ class MainWindow(QMainWindow):
     
     def on_tab_changed(self, index):
         """Handle tab change event"""
-        if index == 2:  # Summary tab
+        if index == 1:  # Assets tab
+            self.assets_tab.refresh()
+        elif index == 2:  # Summary tab
             self.summary_tab.refresh()
     
     def refresh_all(self):

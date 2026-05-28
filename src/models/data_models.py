@@ -96,7 +96,7 @@ class Asset:
     name: str
     asset_type: str = "model"  # model, texture, animation, etc.
     created_date: str = field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
-    
+
     def to_dict(self):
         """Convert to dictionary"""
         return {
@@ -105,7 +105,7 @@ class Asset:
             "type": self.asset_type,
             "created_date": self.created_date
         }
-    
+
     @staticmethod
     def from_dict(data: dict):
         """Create from dictionary"""
@@ -114,4 +114,33 @@ class Asset:
             name=data.get("name"),
             asset_type=data.get("type", "model"),
             created_date=data.get("created_date", datetime.now().strftime("%Y-%m-%d"))
+        )
+
+
+@dataclass
+class Shot:
+    """Shot tracking data model"""
+    id: str
+    shot: str
+    department: str = "FX"
+    status: str = "Pending"
+    due_date: str = ""
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "shot": self.shot,
+            "department": self.department,
+            "status": self.status,
+            "due_date": self.due_date,
+        }
+
+    @staticmethod
+    def from_dict(data: dict):
+        return Shot(
+            id=data.get("id", ""),
+            shot=data.get("shot", ""),
+            department=data.get("department", "FX"),
+            status=data.get("status", "Pending"),
+            due_date=data.get("due_date", ""),
         )

@@ -7,12 +7,23 @@ from typing import Dict, List
 from datetime import datetime
 import uuid
 
-from src.models.data_models import Project, Task, Asset
+from src.models.data_models import Project, Task, Asset, Shot
+
+
+_DEFAULT_SHOTS = [
+    {"id": "shot_001", "shot": "SH010", "department": "FX",        "status": "In Progress", "due_date": "2026-06-15"},
+    {"id": "shot_002", "shot": "SH020", "department": "Rig",        "status": "Pending",     "due_date": "2026-06-20"},
+    {"id": "shot_003", "shot": "SH030", "department": "Animation",  "status": "Done",        "due_date": "2026-05-30"},
+    {"id": "shot_004", "shot": "SH040", "department": "Assets",     "status": "Pending",     "due_date": "2026-07-01"},
+    {"id": "shot_005", "shot": "SH050", "department": "FX",         "status": "In Progress", "due_date": "2026-06-28"},
+    {"id": "shot_006", "shot": "SH060", "department": "Animation",  "status": "Pending",     "due_date": "2026-07-10"},
+    {"id": "shot_007", "shot": "SH070", "department": "Rig",        "status": "Done",        "due_date": "2026-05-25"},
+]
 
 
 class DataManager:
     """Handles all data persistence operations with JSON"""
-    
+
     def __init__(self, data_file: str = "data/pipeline_data.json"):
         """Initialize data manager with JSON file path"""
         self.data_file = data_file
@@ -33,14 +44,19 @@ class DataManager:
             try:
                 with open(self.data_file, 'r') as f:
                     data = json.load(f)
-                    return data
+                # Migrate older files that lack the shots key
+                if "shots" not in data:
+                    data["shots"] = list(_DEFAULT_SHOTS)
+                    self._save_data(data)
+                return data
             except (json.JSONDecodeError, IOError):
                 print(f"Error reading {self.data_file}, creating new file")
         
         # Create blank data structure
         blank_data = {
             "projects": [],
-            "assets": []
+            "assets": [],
+            "shots": list(_DEFAULT_SHOTS),
         }
         self._save_data(blank_data)
         return blank_data
@@ -221,6 +237,38 @@ class DataManager:
         ]
         self.save()
     
+    # ==================== SHOT METHODS ====================
+
+    def get_all_shots(self) -> List[Shot]:
+        """Get all shots"""
+        return [Shot.from_dict(s) for s in self.data.get("shots", [])]
+
+    def create_shot(self, shot: str, department: str = "FX",
+                    status: str = "Pending", due_date: str = "") -> Shot:
+        """Create a new shot"""
+        shot_id = f"shot_{uuid.uuid4().hex[:8]}"
+        new_shot = Shot(id=shot_id, shot=shot, department=department,
+                        status=status, due_date=due_date)
+        self.data["shots"].append(new_shot.to_dict())
+        self.save()
+        return new_shot
+
+    def update_shot(self, shot: Shot):
+        """Update an existing shot"""
+        for i, s in enumerate(self.data.get("shots", [])):
+            if s.get("id") == shot.id:
+                self.data["shots"][i] = shot.to_dict()
+                self.save()
+                return
+
+    def delete_shot(self, shot_id: str):
+        """Delete a shot by ID"""
+        self.data["shots"] = [
+            s for s in self.data.get("shots", [])
+            if s.get("id") != shot_id
+        ]
+        self.save()
+
     # ==================== STATISTICS ====================
     
     def get_statistics(self) -> Dict:

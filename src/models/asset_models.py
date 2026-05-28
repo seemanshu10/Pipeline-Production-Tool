@@ -7,21 +7,7 @@ from PySide2.QtCore import Qt, QAbstractListModel, QAbstractTableModel, QModelIn
 from src.models.data_models import Asset
 
 
-# ---------------------------------------------------------------------------
-# Shot tracking — sample data (no persistence layer yet)
-# ---------------------------------------------------------------------------
-
 SHOT_HEADERS = ["Shot", "Department", "Status", "Due Date"]
-
-SAMPLE_SHOTS = [
-    {"shot": "SH010", "department": "FX",        "status": "In Progress", "due_date": "2026-06-15"},
-    {"shot": "SH020", "department": "Rig",        "status": "Pending",     "due_date": "2026-06-20"},
-    {"shot": "SH030", "department": "Animation",  "status": "Done",        "due_date": "2026-05-30"},
-    {"shot": "SH040", "department": "Assets",     "status": "Pending",     "due_date": "2026-07-01"},
-    {"shot": "SH050", "department": "FX",         "status": "In Progress", "due_date": "2026-06-28"},
-    {"shot": "SH060", "department": "Animation",  "status": "Pending",     "due_date": "2026-07-10"},
-    {"shot": "SH070", "department": "Rig",        "status": "Done",        "due_date": "2026-05-25"},
-]
 
 # ---------------------------------------------------------------------------
 # Department hierarchy — drives QTreeWidget population
@@ -89,7 +75,7 @@ class ShotTableModel(QAbstractTableModel):
 
     def __init__(self, shots: List[dict] = None, parent=None):
         super().__init__(parent)
-        self._shots: List[dict] = shots if shots is not None else SAMPLE_SHOTS
+        self._shots: List[dict] = shots if shots is not None else []
 
     def rowCount(self, parent=QModelIndex()) -> int:
         return len(self._shots)
@@ -111,3 +97,8 @@ class ShotTableModel(QAbstractTableModel):
 
     def flags(self, index):
         return Qt.ItemIsEnabled | Qt.ItemIsSelectable
+
+    def refresh(self, shots: List[dict]):
+        self.beginResetModel()
+        self._shots = shots
+        self.endResetModel()
