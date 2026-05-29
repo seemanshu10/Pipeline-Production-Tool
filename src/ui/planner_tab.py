@@ -159,6 +159,10 @@ class PlannerTab(QWidget):
         self.save_btn.setEnabled(False)
         left_layout.addWidget(self.save_btn)
 
+        new_project_btn_left = QPushButton("New Project")
+        new_project_btn_left.clicked.connect(self.create_project)
+        left_layout.addWidget(new_project_btn_left)
+
         # Add stretch to push everything to top
         left_layout.addStretch()
         
@@ -179,11 +183,8 @@ class PlannerTab(QWidget):
         right_layout.addWidget(self.projects_list)
 
         projects_btn_layout = QHBoxLayout()
-        new_project_btn = QPushButton("New Project")
-        new_project_btn.clicked.connect(self.create_project)
         delete_project_btn = QPushButton("Delete Project")
         delete_project_btn.clicked.connect(self.delete_project)
-        projects_btn_layout.addWidget(new_project_btn)
         projects_btn_layout.addWidget(delete_project_btn)
         right_layout.addLayout(projects_btn_layout)
 
@@ -480,19 +481,9 @@ class PlannerTab(QWidget):
             QMessageBox.warning(self, "Warning", "Project name cannot be empty.")
             return
 
-        # No project selected — offer to create a new one
         if not self.current_project_id:
-            reply = QMessageBox.warning(
-                self,
-                "No Project Selected",
-                f"No project is currently selected.\n\n"
-                f"A new project named \"{name}\" will be created.\n\n"
-                f"Do you want to continue?",
-                QMessageBox.Yes | QMessageBox.Cancel,
-                QMessageBox.Cancel,
-            )
-            if reply == QMessageBox.Yes:
-                self.create_project()
+            QMessageBox.warning(self, "No Project Selected",
+                                "Select a project from the list before saving changes.")
             return
 
         project = self.data_manager.get_project_by_id(self.current_project_id)

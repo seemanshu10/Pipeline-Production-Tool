@@ -1,0 +1,25 @@
+{
+  "assets": [
+    {
+      "id": "asset_d8afb29d",
+      "name": "Tower",
+      "type": "texture",
+      "created_date": "2026-05-28"
+    },
+    {
+      "id": "asset_b382c240",
+      "name": "ASSet",
+      "type": "model",
+      "created_date": "2026-05-28"
+    }
+  ],
+  "shots": [
+    {"id": "shot_001", "shot": "SH010", "department": "FX",        "status": "In Progress", "due_date": "2026-06-15"},
+    {"id": "shot_002", "shot": "SH020", "department": "Rig",       "status": "Pending",     "due_date": "2026-06-20"},
+    {"id": "shot_003", "shot": "SH030", "department": "Animation", "status": "Done",        "due_date": "2026-05-30"},
+    {"id": "shot_004", "shot": "SH040", "department": "Assets",    "status": "Pending",     "due_date": "2026-07-01"},
+    {"id": "shot_005", "shot": "SH050", "department": "FX",        "status": "In Progress", "due_date": "2026-06-28"},
+    {"id": "shot_006", "shot": "SH060", "department": "Animation", "status": "Pending",     "due_date": "2026-07-10"},
+    {"id": "shot_007", "shot": "SH070", "department": "Rig",       "status": "Done",        "due_date": "2026-05-25"}
+  ]
+}

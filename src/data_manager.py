@@ -1,14 +1,15 @@
-"""Data persistence manager using JSON"""
+"""Data persistence manager — projects in one file, assets/shots in another"""
 
 import json
 import os
-from pathlib import Path
 from typing import Dict, List
-from datetime import datetime
 import uuid
 
 from src.models.data_models import Project, Task, Asset, Shot
 
+
+_PROJECTS_FILE     = "data/Project.json"
+_ASSETS_SHOTS_FILE = "data/production.json"
 
 _DEFAULT_SHOTS = [
     {"id": "shot_001", "shot": "SH010", "department": "FX",        "status": "In Progress", "due_date": "2026-06-15"},
@@ -22,271 +23,257 @@ _DEFAULT_SHOTS = [
 
 
 class DataManager:
-    """Handles all data persistence operations with JSON"""
+    """Handles all data persistence.
 
-    def __init__(self, data_file: str = "data/pipeline_data.json"):
-        """Initialize data manager with JSON file path"""
-        self.data_file = data_file
-        self.data = self._load_or_create()
-    
-    def _get_data_dir(self):
-        """Get data directory, create if needed"""
-        data_dir = os.path.dirname(self.data_file)
-        if data_dir and not os.path.exists(data_dir):
-            os.makedirs(data_dir, exist_ok=True)
-        return data_dir
-    
-    def _load_or_create(self) -> Dict:
-        """Load data from JSON or create blank structure if file doesn't exist"""
-        self._get_data_dir()
-        
-        if os.path.exists(self.data_file):
+    Projects are stored in pipeline_projects.json and exposed via
+    open/save dialogs so the user can manage them freely.
+
+    Assets and shots are stored in pipeline_assets_shots.json which is
+    managed internally by the app and never exposed to user file dialogs.
+    """
+
+    def __init__(self,
+                 projects_file: str = _PROJECTS_FILE,
+                 assets_shots_file: str = _ASSETS_SHOTS_FILE):
+        self.projects_file     = projects_file
+        self.assets_shots_file = assets_shots_file
+
+        self._projects_data    = self._load_projects()
+        self._static_data      = self._load_static()
+
+    # ──────────────────────────────────────────────────────────────────────
+    # Internal load / save helpers
+    # ──────────────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _ensure_dir(filepath: str):
+        d = os.path.dirname(filepath)
+        if d:
+            os.makedirs(d, exist_ok=True)
+
+    def _load_projects(self) -> Dict:
+        self._ensure_dir(self.projects_file)
+        if os.path.exists(self.projects_file):
             try:
-                with open(self.data_file, 'r', encoding='utf-8') as f:
+                with open(self.projects_file, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, IOError):
+                print(f"Could not read {self.projects_file}, starting fresh.")
+        return {"projects": []}
+
+    def _load_static(self) -> Dict:
+        self._ensure_dir(self.assets_shots_file)
+        if os.path.exists(self.assets_shots_file):
+            try:
+                with open(self.assets_shots_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                # Migrate older files that lack the shots key
                 if "shots" not in data:
                     data["shots"] = list(_DEFAULT_SHOTS)
-                    self._save_data(data)
+                    self._write_json(self.assets_shots_file, data)
                 return data
             except (json.JSONDecodeError, IOError):
-                print(f"Error reading {self.data_file}, creating new file")
-        
-        # Create blank data structure
-        blank_data = {
-            "projects": [],
-            "assets": [],
-            "shots": list(_DEFAULT_SHOTS),
-        }
-        self._save_data(blank_data)
-        return blank_data
-    
-    def _save_data(self, data: Dict = None):
-        """Save data to JSON file"""
-        if data is None:
-            data = self.data
-        
-        self._get_data_dir()
-        
+                print(f"Could not read {self.assets_shots_file}, starting fresh.")
+        data = {"assets": [], "shots": list(_DEFAULT_SHOTS)}
+        self._write_json(self.assets_shots_file, data)
+        return data
+
+    @staticmethod
+    def _write_json(filepath: str, data: Dict):
+        DataManager._ensure_dir(filepath)
         try:
-            with open(self.data_file, 'w', encoding='utf-8') as f:
+            with open(filepath, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
         except IOError as e:
-            print(f"Error saving to {self.data_file}: {e}")
-    
-    def save(self):
-        """Save current data to file"""
-        self._save_data()
+            print(f"Error saving {filepath}: {e}")
+
+    def _save_projects(self):
+        self._write_json(self.projects_file, self._projects_data)
+
+    def _save_static(self):
+        self._write_json(self.assets_shots_file, self._static_data)
+
+    # ──────────────────────────────────────────────────────────────────────
+    # User-facing file operations (projects only)
+    # ──────────────────────────────────────────────────────────────────────
 
     def load_from_file(self, path: str) -> bool:
-        """Replace in-memory data with contents of an arbitrary JSON file."""
+        """Replace in-memory projects with contents of a user-chosen JSON file."""
         try:
-            with open(path, 'r', encoding='utf-8') as f:
+            with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            self.data = data
-            self.data_file = path
+            self._projects_data = data
+            self.projects_file  = path
             return True
         except (json.JSONDecodeError, IOError) as e:
             print(f"Error loading {path}: {e}")
             return False
 
     def save_to_file(self, path: str) -> bool:
-        """Write current in-memory data to an arbitrary file path."""
+        """Write current projects to a user-chosen JSON file."""
         try:
-            with open(path, 'w', encoding='utf-8') as f:
-                json.dump(self.data, f, indent=2, ensure_ascii=False)
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(self._projects_data, f, indent=2, ensure_ascii=False)
             return True
         except IOError as e:
-            print(f"Error saving to {path}: {e}")
+            print(f"Error saving {path}: {e}")
             return False
-    
-    # ==================== PROJECT METHODS ====================
-    
+
+    # ──────────────────────────────────────────────────────────────────────
+    # Project methods
+    # ──────────────────────────────────────────────────────────────────────
+
     def get_all_projects(self) -> List[Project]:
-        """Get all projects"""
-        projects = []
-        for proj_data in self.data.get("projects", []):
-            projects.append(Project.from_dict(proj_data))
-        return projects
-    
+        return [Project.from_dict(p) for p in self._projects_data.get("projects", [])]
+
     def get_project_by_id(self, project_id: str) -> Project:
-        """Get a specific project by ID"""
-        for proj_data in self.data.get("projects", []):
-            if proj_data.get("id") == project_id:
-                return Project.from_dict(proj_data)
+        for p in self._projects_data.get("projects", []):
+            if p.get("id") == project_id:
+                return Project.from_dict(p)
         return None
-    
-    def create_project(self, name: str, supervisor_name: str = "", department: str = "Rig",
-                      project_type: str = "VFX", needs_daily_review: bool = False,
-                      client_delivery: bool = False, high_priority: bool = False,
-                      priority: int = 50, timeline_offset: int = 25,
-                      completion: int = 0, notes: str = "") -> Project:
-        """Create a new project"""
-        project_id = f"proj_{uuid.uuid4().hex[:8]}"
+
+    def create_project(self, name: str, supervisor_name: str = "",
+                       department: str = "Rig", project_type: str = "VFX",
+                       needs_daily_review: bool = False, client_delivery: bool = False,
+                       high_priority: bool = False, priority: int = 50,
+                       timeline_offset: int = 25, completion: int = 0,
+                       notes: str = "") -> Project:
         project = Project(
-            id=project_id,
-            name=name,
-            supervisor_name=supervisor_name,
-            department=department,
-            project_type=project_type,
-            needs_daily_review=needs_daily_review,
-            client_delivery=client_delivery,
-            high_priority=high_priority,
-            priority=priority,
-            timeline_offset=timeline_offset,
-            completion=completion,
-            notes=notes,
+            id=f"proj_{uuid.uuid4().hex[:8]}",
+            name=name, supervisor_name=supervisor_name, department=department,
+            project_type=project_type, needs_daily_review=needs_daily_review,
+            client_delivery=client_delivery, high_priority=high_priority,
+            priority=priority, timeline_offset=timeline_offset,
+            completion=completion, notes=notes,
         )
-        self.data["projects"].append(project.to_dict())
-        self.save()
+        self._projects_data.setdefault("projects", []).append(project.to_dict())
+        self._save_projects()
         return project
-    
+
     def update_project(self, project: Project):
-        """Update an existing project"""
-        for i, proj_data in enumerate(self.data.get("projects", [])):
-            if proj_data.get("id") == project.id:
-                self.data["projects"][i] = project.to_dict()
-                self.save()
+        for i, p in enumerate(self._projects_data.get("projects", [])):
+            if p.get("id") == project.id:
+                self._projects_data["projects"][i] = project.to_dict()
+                self._save_projects()
                 return
-    
+
     def delete_project(self, project_id: str):
-        """Delete a project by ID"""
-        self.data["projects"] = [
-            p for p in self.data.get("projects", [])
+        self._projects_data["projects"] = [
+            p for p in self._projects_data.get("projects", [])
             if p.get("id") != project_id
         ]
-        self.save()
-    
-    # ==================== TASK METHODS ====================
-    
+        self._save_projects()
+
+    # ──────────────────────────────────────────────────────────────────────
+    # Task methods
+    # ──────────────────────────────────────────────────────────────────────
+
     def get_tasks_for_project(self, project_id: str) -> List[Task]:
-        """Get all tasks for a specific project"""
         project = self.get_project_by_id(project_id)
-        if project:
-            return project.tasks
-        return []
-    
+        return project.tasks if project else []
+
     def create_task(self, project_id: str, task_name: str) -> Task:
-        """Create a new task in a project"""
         project = self.get_project_by_id(project_id)
         if not project:
             return None
-        
-        task_id = f"task_{uuid.uuid4().hex[:8]}"
-        task = Task(id=task_id, name=task_name)
+        task = Task(id=f"task_{uuid.uuid4().hex[:8]}", name=task_name)
         project.tasks.append(task)
         self.update_project(project)
         return task
-    
+
     def update_task(self, project_id: str, task: Task):
-        """Update a task in a project"""
         project = self.get_project_by_id(project_id)
         if not project:
             return
-        
         for i, t in enumerate(project.tasks):
             if t.id == task.id:
                 project.tasks[i] = task
                 self.update_project(project)
                 return
-    
+
     def delete_task(self, project_id: str, task_id: str):
-        """Delete a task from a project"""
         project = self.get_project_by_id(project_id)
         if not project:
             return
-        
         project.tasks = [t for t in project.tasks if t.id != task_id]
         self.update_project(project)
-    
-    # ==================== ASSET METHODS ====================
-    
+
+    # ──────────────────────────────────────────────────────────────────────
+    # Asset methods  (saved to assets/shots file)
+    # ──────────────────────────────────────────────────────────────────────
+
     def get_all_assets(self) -> List[Asset]:
-        """Get all assets"""
-        assets = []
-        for asset_data in self.data.get("assets", []):
-            assets.append(Asset.from_dict(asset_data))
-        return assets
-    
+        return [Asset.from_dict(a) for a in self._static_data.get("assets", [])]
+
     def get_asset_by_id(self, asset_id: str) -> Asset:
-        """Get a specific asset by ID"""
-        for asset_data in self.data.get("assets", []):
-            if asset_data.get("id") == asset_id:
-                return Asset.from_dict(asset_data)
+        for a in self._static_data.get("assets", []):
+            if a.get("id") == asset_id:
+                return Asset.from_dict(a)
         return None
-    
+
     def create_asset(self, name: str, asset_type: str = "model") -> Asset:
-        """Create a new asset"""
-        asset_id = f"asset_{uuid.uuid4().hex[:8]}"
-        asset = Asset(id=asset_id, name=name, asset_type=asset_type)
-        self.data["assets"].append(asset.to_dict())
-        self.save()
+        asset = Asset(id=f"asset_{uuid.uuid4().hex[:8]}", name=name, asset_type=asset_type)
+        self._static_data.setdefault("assets", []).append(asset.to_dict())
+        self._save_static()
         return asset
-    
+
     def update_asset(self, asset: Asset):
-        """Update an existing asset"""
-        for i, asset_data in enumerate(self.data.get("assets", [])):
-            if asset_data.get("id") == asset.id:
-                self.data["assets"][i] = asset.to_dict()
-                self.save()
+        for i, a in enumerate(self._static_data.get("assets", [])):
+            if a.get("id") == asset.id:
+                self._static_data["assets"][i] = asset.to_dict()
+                self._save_static()
                 return
-    
+
     def delete_asset(self, asset_id: str):
-        """Delete an asset by ID"""
-        self.data["assets"] = [
-            a for a in self.data.get("assets", [])
+        self._static_data["assets"] = [
+            a for a in self._static_data.get("assets", [])
             if a.get("id") != asset_id
         ]
-        self.save()
-    
-    # ==================== SHOT METHODS ====================
+        self._save_static()
+
+    # ──────────────────────────────────────────────────────────────────────
+    # Shot methods  (saved to assets/shots file)
+    # ──────────────────────────────────────────────────────────────────────
 
     def get_all_shots(self) -> List[Shot]:
-        """Get all shots"""
-        return [Shot.from_dict(s) for s in self.data.get("shots", [])]
+        return [Shot.from_dict(s) for s in self._static_data.get("shots", [])]
 
     def create_shot(self, shot: str, department: str = "FX",
                     status: str = "Pending", due_date: str = "") -> Shot:
-        """Create a new shot"""
-        shot_id = f"shot_{uuid.uuid4().hex[:8]}"
-        new_shot = Shot(id=shot_id, shot=shot, department=department,
-                        status=status, due_date=due_date)
-        self.data["shots"].append(new_shot.to_dict())
-        self.save()
+        new_shot = Shot(id=f"shot_{uuid.uuid4().hex[:8]}", shot=shot,
+                        department=department, status=status, due_date=due_date)
+        self._static_data.setdefault("shots", []).append(new_shot.to_dict())
+        self._save_static()
         return new_shot
 
     def update_shot(self, shot: Shot):
-        """Update an existing shot"""
-        for i, s in enumerate(self.data.get("shots", [])):
+        for i, s in enumerate(self._static_data.get("shots", [])):
             if s.get("id") == shot.id:
-                self.data["shots"][i] = shot.to_dict()
-                self.save()
+                self._static_data["shots"][i] = shot.to_dict()
+                self._save_static()
                 return
 
     def delete_shot(self, shot_id: str):
-        """Delete a shot by ID"""
-        self.data["shots"] = [
-            s for s in self.data.get("shots", [])
+        self._static_data["shots"] = [
+            s for s in self._static_data.get("shots", [])
             if s.get("id") != shot_id
         ]
-        self.save()
+        self._save_static()
 
-    # ==================== STATISTICS ====================
-    
+    # ──────────────────────────────────────────────────────────────────────
+    # Statistics
+    # ──────────────────────────────────────────────────────────────────────
+
     def get_statistics(self) -> Dict:
-        """Get overall statistics"""
-        projects = self.get_all_projects()
-        assets = self.get_all_assets()
-        
+        projects    = self.get_all_projects()
+        assets      = self.get_all_assets()
         total_tasks = sum(len(p.tasks) for p in projects)
-        pending_tasks = sum(1 for p in projects for t in p.tasks if t.status == "pending")
-        completed_tasks = sum(1 for p in projects for t in p.tasks if t.status == "done")
-        
+        pending     = sum(1 for p in projects for t in p.tasks if t.status == "pending")
+        completed   = sum(1 for p in projects for t in p.tasks if t.status == "done")
         return {
-            "total_projects": len(projects),
-            "total_tasks": total_tasks,
-            "pending_tasks": pending_tasks,
-            "completed_tasks": completed_tasks,
-            "in_progress_tasks": total_tasks - pending_tasks - completed_tasks,
-            "total_assets": len(assets)
+            "total_projects":    len(projects),
+            "total_tasks":       total_tasks,
+            "pending_tasks":     pending,
+            "completed_tasks":   completed,
+            "in_progress_tasks": total_tasks - pending - completed,
+            "total_assets":      len(assets),
         }
