@@ -1,80 +1,133 @@
 # VFX Pipeline Production Tool
 
-A modular PySide2 desktop application for managing VFX projects, tasks, and assets with persistent JSON storage.
+A modular PySide2 desktop application for managing VFX projects, tasks, shot tracking, and assets and full JSON persistence.
+
+---
 
 ## Features
 
-- **Planner Tab**: Create and manage projects with task queues
-- **Assets Tab**: Track VFX assets (models, textures, animations, etc.)
-- **Summary Tab**: View project statistics and overview
+### Tab 1 — Planner
+- Create, edit, and delete **projects** with name, supervisor, department, and project type (Animation / VFX / Gaming)
+- Set project **flags**: Needs Daily Review, Client Delivery, High Priority
+- **Priority slider** — auto-saves on release
+- **Timeline Offset scrollbar** — auto-saves on release
+- **Completion slider + progress bar**:
+  - Sliding to 100% marks all tasks as **Done** automatically
+  - Sliding back below 100% restores each task's previous status
+- **Add / Remove tasks** per project
+- **Mark Done** for individual tasks
+- **Project Notes** text area with Clear Notes action
+- **Save Changes** button for bulk field updates
+- Formatted task list: `ProjectName  |  Department  |  TaskName  |  status`
 
-## Setup
+### Tab 2 — Assets
+- **Published Assets** panel — lists all assets stored in JSON
+- **Shot Tracking** table — Shot, Department, Status, Due Date; fully persisted in JSON alongside projects and assets
+- **Department Hierarchy** tree — Pipeline department / sub-group / role structure
+  - Toggle button to **Collapse All / Expand All** the entire tree
 
-### Prerequisites
-- Python 3.10 or higher
-- pip (Python package manager)
+### Tab 3 — Summary
+- Live statistics: total projects, tasks by status (pending / in-progress / done), total assets
+- **Export Summary as JSON** — saves a full snapshot of projects, tasks, assets, and statistics to a user-chosen file
 
-### Installation
+### Menu Bar
+| Menu | Action | Shortcut |
+|------|--------|----------|
+| File | New Project | Ctrl+N |
+| File | Open Project… | Ctrl+O |
+| File | Save Project… | Ctrl+S |
+| File | Exit | Ctrl+Q |
+| Help | About | F1 |
 
-1. Clone the repository
-2. Create a virtual environment (optional but recommended):
-   ```bash
-   python -m venv venv
-   source venv/Scripts/activate  # On Windows
-   ```
+### UI Theme
+Dark ink-wash palette applied via `resources/style.qss` — charcoal black, cool gray, and soft ivory for a gallery-like, high-contrast feel.
 
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-## Running the Application
-
-```bash
-python main.py
-```
+---
 
 ## Project Structure
 
 ```
 Pipeline-Production-Tool/
-├── main.py                    # Application entry point
-├── requirements.txt           # Python dependencies
-├── README.md                  # This file
+├── main.py                        # Entry point
+├── requirements.txt               # Python dependencies
+├── README.md
+├── resources/
+│   └── style.qss                  # App-wide dark ink-wash stylesheet
 ├── data/
-│   └── pipeline_data.json     # Persistent JSON storage (auto-created)
-├── src/
-│   ├── __init__.py
-│   ├── app.py                 # Main application class
-│   ├── data_manager.py        # JSON persistence layer
-│   ├── models/
-│   │   ├── __init__.py
-│   │   └── data_models.py     # Data classes (Project, Task, Asset)
-│   └── ui/
-│       ├── __init__.py
-│       ├── main_window.py     # Main window with tabs
-│       ├── planner_tab.py     # Planner tab UI
-│       ├── assets_tab.py      # Assets tab UI
-│       └── summary_tab.py     # Summary tab UI
+│   └── pipeline_data.json         # Persistent JSON storage (auto-created)
+└── src/
+    ├── app.py                     # App init — loads stylesheet, launches window
+    ├── data_manager.py            # JSON persistence layer (projects, tasks, assets, shots)
+    ├── models/
+    │   ├── data_models.py         # Dataclasses: Project, Task, Asset, Shot
+    │   └── asset_models.py        # Qt models: AssetListModel, ShotTableModel, DEPARTMENT_TREE
+    └── ui/
+        ├── main_window.py         # Main window — tab widget, menu bar, file I/O
+        ├── planner_tab.py         # Tab 1 — project/task management
+        ├── assets_tab.py          # Tab 2 — assets, shot tracking, dept hierarchy
+        └── summary_tab.py         # Tab 3 — statistics, export
 ```
+
+---
+
+## Setup
+
+### Prerequisites
+
+- Python 3.10 or higher
+- pip
+
+### Installation
+
+```bash
+# 1. Clone the repository
+git clone <repo-url>
+cd Pipeline-Production-Tool
+
+# 2. Create and activate a virtual environment
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+# source .venv/bin/activate   # macOS / Linux
+
+# 3. Install dependencies
+pip install -r requirements.txt
+```
+
+### Running
+
+```bash
+python main.py
+```
+
+---
 
 ## Data Storage
 
-All data is stored in `data/pipeline_data.json` in the following format:
+All data is stored in `data/pipeline_data.json`, created automatically on first run. Shot tracking is seeded with 7 default shots on first launch; any edits persist across restarts.
 
 ```json
 {
   "projects": [
     {
-      "id": "proj_001",
-      "name": "Project Name",
+      "id": "proj_abc12345",
+      "name": "Dragon FX",
+      "supervisor_name": "Jane Smith",
+      "department": "FX",
+      "project_type": "VFX",
+      "needs_daily_review": true,
+      "client_delivery": false,
+      "high_priority": true,
+      "priority": 80,
+      "timeline_offset": 30,
+      "completion": 60,
+      "notes": "Client review on Friday.",
       "created_date": "2026-05-28",
       "tasks": [
         {
           "id": "task_001",
-          "name": "Task Name",
-          "status": "pending",
-          "priority": "medium",
+          "name": "Simulate smoke",
+          "status": "in-progress",
+          "priority": "high",
           "created_date": "2026-05-28"
         }
       ]
@@ -83,42 +136,67 @@ All data is stored in `data/pipeline_data.json` in the following format:
   "assets": [
     {
       "id": "asset_001",
-      "name": "Asset Name",
+      "name": "Dragon_Rig_v3",
       "type": "model",
       "created_date": "2026-05-28"
+    }
+  ],
+  "shots": [
+    {
+      "id": "shot_001",
+      "shot": "SH010",
+      "department": "FX",
+      "status": "In Progress",
+      "due_date": "2026-06-15"
     }
   ]
 }
 ```
 
-## Usage
+### Task statuses
+`pending` · `in-progress` · `done`
 
-1. **Planner Tab**:
-   - Create a new project using the "New Project" button
-   - Select a project to view its tasks
-   - Add tasks to projects using the "New Task" button
-   - Delete projects or tasks as needed
+### Asset types
+`model` · `texture` · `animation` · *(any custom string)*
 
-2. **Assets Tab**:
-   - Create new assets using the "New Asset" button
-   - View all assets in a list
-   - Delete assets as needed
+### Shot statuses
+`Pending` · `In Progress` · `Done`
 
-3. **Summary Tab**:
-   - View overall project statistics
-   - See counts of projects, tasks, and assets
+---
 
-## Notes
+## Usage Guide
 
-- All changes are automatically saved to `data/pipeline_data.json`
-- Data persists across application restarts
-- This is an initial version with basic CRUD functionality
+### Planner Tab
 
-## Future Features
+1. Fill in project details on the left panel and click **New Project** to create one.
+2. Select a project from the **Projects** list to load its details and tasks.
+3. Use **Add Task** / **Remove Task** to manage the task queue.
+4. Click **Mark Done** to complete a selected task individually.
+5. Drag the **Completion** slider to 100 to mark all tasks done at once; drag back below 100 to restore their previous statuses.
+6. Click **Save Changes** to persist any form edits (name, department, flags, notes).
 
-- Edit functionality for projects, tasks, and assets
-- Advanced task management (dependencies, priorities, deadlines)
-- Asset linking to tasks
-- User management and team collaboration
-- Export/reporting features
-- Customizable UI themes
+### Assets Tab
+
+- The **Published Assets** panel reflects assets in `pipeline_data.json`.
+- The **Shot Tracking** table is fully persisted — any changes written back to JSON are reflected immediately on tab switch.
+- Use the **Collapse All / Expand All** toggle to navigate the Department Hierarchy tree.
+
+### Summary Tab
+
+- Statistics update whenever you switch to this tab.
+- Click **Export Summary as JSON** to save a full pipeline snapshot for reporting or handoff.
+
+### File Menu
+
+- **Open Project (Ctrl+O)** — loads any `pipeline_data.json` file and replaces the current session.
+- **Save Project (Ctrl+S)** — writes the current session to a new JSON file of your choice.
+
+---
+
+## Dependencies
+
+| Package | Version |
+|---------|---------|
+| PySide2 | 5.15.13 |
+
+Python standard library only beyond PySide2 (`json`, `uuid`, `datetime`, `pathlib`).

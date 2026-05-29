@@ -1,0 +1,185 @@
+{
+  "exported_at": "2026-05-28 16:37:46",
+  "statistics": {
+    "total_projects": 5,
+    "total_tasks": 9,
+    "pending_tasks": 4,
+    "completed_tasks": 5,
+    "in_progress_tasks": 0,
+    "total_assets": 2
+  },
+  "projects": [
+    {
+      "id": "proj_0f0226c3",
+      "name": "France",
+      "supervisor": "",
+      "department": "Rig",
+      "project_type": "VFX",
+      "priority": 50,
+      "completion": 37,
+      "timeline_offset": 25,
+      "flags": {
+        "needs_daily_review": false,
+        "client_delivery": false,
+        "high_priority": false
+      },
+      "notes": "New Project _France ",
+      "created_date": "2026-05-28",
+      "tasks": [
+        {
+          "id": "task_640bfc31",
+          "name": "asdsad",
+          "status": "done",
+          "priority": "medium",
+          "created_date": "2026-05-28"
+        },
+        {
+          "id": "task_50845812",
+          "name": "New Task",
+          "status": "done",
+          "priority": "medium",
+          "created_date": "2026-05-28"
+        },
+        {
+          "id": "task_61974d42",
+          "name": "new task ",
+          "status": "pending",
+          "priority": "medium",
+          "created_date": "2026-05-28"
+        },
+        {
+          "id": "task_9f97f8d7",
+          "name": "Added Task ",
+          "status": "pending",
+          "priority": "medium",
+          "created_date": "2026-05-28"
+        }
+      ]
+    },
+    {
+      "id": "proj_6db029db",
+      "name": "Spain",
+      "supervisor": "Seemanshu",
+      "department": "Animation",
+      "project_type": "Gaming",
+      "priority": 85,
+      "completion": 100,
+      "timeline_offset": 60,
+      "flags": {
+        "needs_daily_review": true,
+        "client_delivery": false,
+        "high_priority": true
+      },
+      "notes": "Spain Notes ",
+      "created_date": "2026-05-28",
+      "tasks": [
+        {
+          "id": "task_a4812b12",
+          "name": "New Task",
+          "status": "done",
+          "priority": "medium",
+          "created_date": "2026-05-28"
+        }
+      ]
+    },
+    {
+      "id": "proj_f84d7022",
+      "name": "Project 3",
+      "supervisor": "Seemanshu",
+      "department": "FX",
+      "project_type": "Animation",
+      "priority": 38,
+      "completion": 25,
+      "timeline_offset": 0,
+      "flags": {
+        "needs_daily_review": true,
+        "client_delivery": true,
+        "high_priority": true
+      },
+      "notes": "",
+      "created_date": "2026-05-28",
+      "tasks": [
+        {
+          "id": "task_8749e9d3",
+          "name": "New Task",
+          "status": "pending",
+          "priority": "medium",
+          "created_date": "2026-05-28"
+        },
+        {
+          "id": "task_dde43422",
+          "name": "New ",
+          "status": "done",
+          "priority": "medium",
+          "created_date": "2026-05-28"
+        }
+      ]
+    },
+    {
+      "id": "proj_e2591b2e",
+      "name": "Spain",
+      "supervisor": "Seemanshu",
+      "department": "Animation",
+      "project_type": "Gaming",
+      "priority": 43,
+      "completion": 40,
+      "timeline_offset": 25,
+      "flags": {
+        "needs_daily_review": false,
+        "client_delivery": true,
+        "high_priority": true
+      },
+      "notes": "",
+      "created_date": "2026-05-28",
+      "tasks": [
+        {
+          "id": "task_c7b78e3a",
+          "name": "FX ",
+          "status": "done",
+          "priority": "medium",
+          "created_date": "2026-05-28"
+        }
+      ]
+    },
+    {
+      "id": "proj_6fca82f1",
+      "name": "New Project",
+      "supervisor": "Dro",
+      "department": "Assets",
+      "project_type": "VFX",
+      "priority": 50,
+      "completion": 33,
+      "timeline_offset": 25,
+      "flags": {
+        "needs_daily_review": false,
+        "client_delivery": true,
+        "high_priority": true
+      },
+      "notes": "",
+      "created_date": "2026-05-28",
+      "tasks": [
+        {
+          "id": "task_9cce5a3c",
+          "name": "New Task ",
+          "status": "pending",
+          "priority": "medium",
+          "created_date": "2026-05-28"
+        }
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "id": "asset_d8afb29d",
+      "name": "Tower",
+      "type": "texture",
+      "created_date": "2026-05-28"
+    },
+    {
+      "id": "asset_b382c240",
+      "name": "ASSet",
+      "type": "model",
+      "created_date": "2026-05-28"
+    }
+  ]
+}

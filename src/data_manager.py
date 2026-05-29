@@ -42,7 +42,7 @@ class DataManager:
         
         if os.path.exists(self.data_file):
             try:
-                with open(self.data_file, 'r') as f:
+                with open(self.data_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                 # Migrate older files that lack the shots key
                 if "shots" not in data:
@@ -69,8 +69,8 @@ class DataManager:
         self._get_data_dir()
         
         try:
-            with open(self.data_file, 'w') as f:
-                json.dump(data, f, indent=2)
+            with open(self.data_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
         except IOError as e:
             print(f"Error saving to {self.data_file}: {e}")
     
@@ -81,7 +81,7 @@ class DataManager:
     def load_from_file(self, path: str) -> bool:
         """Replace in-memory data with contents of an arbitrary JSON file."""
         try:
-            with open(path, 'r') as f:
+            with open(path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             self.data = data
             self.data_file = path
@@ -93,8 +93,8 @@ class DataManager:
     def save_to_file(self, path: str) -> bool:
         """Write current in-memory data to an arbitrary file path."""
         try:
-            with open(path, 'w') as f:
-                json.dump(self.data, f, indent=2)
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(self.data, f, indent=2, ensure_ascii=False)
             return True
         except IOError as e:
             print(f"Error saving to {path}: {e}")
@@ -116,16 +116,17 @@ class DataManager:
                 return Project.from_dict(proj_data)
         return None
     
-    def create_project(self, name: str, supervisor_name: str = "", department: str = "Rig", 
+    def create_project(self, name: str, supervisor_name: str = "", department: str = "Rig",
                       project_type: str = "VFX", needs_daily_review: bool = False,
                       client_delivery: bool = False, high_priority: bool = False,
-                      priority: int = 50, timeline_offset: int = 25, completion: int = 25) -> Project:
+                      priority: int = 50, timeline_offset: int = 25,
+                      completion: int = 0, notes: str = "") -> Project:
         """Create a new project"""
         project_id = f"proj_{uuid.uuid4().hex[:8]}"
         project = Project(
-            id=project_id, 
-            name=name, 
-            supervisor_name=supervisor_name, 
+            id=project_id,
+            name=name,
+            supervisor_name=supervisor_name,
             department=department,
             project_type=project_type,
             needs_daily_review=needs_daily_review,
@@ -133,7 +134,8 @@ class DataManager:
             high_priority=high_priority,
             priority=priority,
             timeline_offset=timeline_offset,
-            completion=completion
+            completion=completion,
+            notes=notes,
         )
         self.data["projects"].append(project.to_dict())
         self.save()

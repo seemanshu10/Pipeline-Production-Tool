@@ -22,7 +22,7 @@ class MainWindow(QMainWindow):
         
         # Set window properties
         self.setWindowTitle("VFX Pipeline Production Tool")
-        self.setGeometry(100, 100, 1200, 1000)
+        self.setGeometry(100, 100, 1200, 900)
         
         # Create menu bar
         self.create_menu_bar()

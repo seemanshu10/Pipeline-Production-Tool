@@ -4,7 +4,7 @@ from PySide2.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget,
     QListWidgetItem, QLabel, QInputDialog, QMessageBox, QSplitter,
     QGroupBox, QFormLayout, QLineEdit, QComboBox, QRadioButton,
-    QCheckBox, QButtonGroup, QScrollArea, QSlider, QScrollBar, QProgressBar,
+    QCheckBox, QButtonGroup, QSlider, QScrollBar, QProgressBar,
     QTextEdit, QGridLayout
 )
 from PySide2.QtCore import Qt
@@ -20,7 +20,6 @@ class PlannerTab(QWidget):
         self.data_manager = data_manager
         self.parent_window = parent
         self.current_project_id = None
-        self._pre_completion_statuses: dict = {}  # task_id -> status before slider hit 100
         self.init_ui()
         self.refresh()
     
@@ -119,25 +118,15 @@ class PlannerTab(QWidget):
         timeline_row.addWidget(self.timeline_value_label)
         priority_layout.addLayout(timeline_row)
 
-        # Completion slider + progress bar (0-100)
+        # Completion progress bar — read-only, auto-calculated from task statuses
         completion_row = QHBoxLayout()
-        self.completion_slider = QSlider(Qt.Horizontal)
-        self.completion_slider.setMinimum(0)
-        self.completion_slider.setMaximum(100)
-        self.completion_slider.setValue(25)
         self.completion_progress = QProgressBar()
         self.completion_progress.setMinimum(0)
         self.completion_progress.setMaximum(100)
-        self.completion_progress.setValue(25)
-        self.completion_value_label = QLabel("25")
-        self.completion_slider.valueChanged.connect(
-            lambda v: [self.completion_progress.setValue(v), self.completion_value_label.setText(str(v))]
-        )
-        self.completion_slider.sliderReleased.connect(self._on_completion_released)
+        self.completion_progress.setValue(0)
+        self.completion_progress.setFormat("")  # blank until a project is selected
         completion_row.addWidget(QLabel("Completion:"))
-        completion_row.addWidget(self.completion_slider)
         completion_row.addWidget(self.completion_progress)
-        completion_row.addWidget(self.completion_value_label)
         priority_layout.addLayout(completion_row)
 
         priority_group.setLayout(priority_layout)
@@ -164,7 +153,7 @@ class PlannerTab(QWidget):
         actions_group.setLayout(actions_grid)
         left_layout.addWidget(actions_group)
 
-        # Save Changes button
+        # Save Changes button — enabled only when a field is modified
         self.save_btn = QPushButton("Save Changes")
         self.save_btn.clicked.connect(self.save_project_details)
         self.save_btn.setEnabled(False)
@@ -221,6 +210,7 @@ class PlannerTab(QWidget):
         
         layout.addWidget(splitter)
         self.setLayout(layout)
+        self._connect_dirty_signals()
     
     def refresh(self):
         """Refresh projects and tasks lists"""
@@ -257,55 +247,118 @@ class PlannerTab(QWidget):
             item = QListWidgetItem(item_text)
             item.setData(Qt.UserRole, task.id)
             self.tasks_list.addItem(item)
+
+        self._update_completion_bar()
     
     def on_project_selected(self):
-        """Handle project selection"""
+        """Handle project selection — warn before overwriting any unsaved form data."""
         selected_items = self.projects_list.selectedItems()
-        if selected_items:
-            self.current_project_id = selected_items[0].data(Qt.UserRole)
-            self.refresh_tasks()
-            self.load_project_details()
-            self._set_status(f"Project '{selected_items[0].text()}' selected.")
-        else:
+        if not selected_items:
             self.current_project_id = None
             self.tasks_list.clear()
             self.clear_project_details()
             self._set_status("No project selected.")
+            return
+
+        incoming_id = selected_items[0].data(Qt.UserRole)
+
+        # Skip the warning when re-selecting the same project that's already loaded
+        if incoming_id == self.current_project_id:
+            return
+
+        has_data = (
+            bool(self.project_name_input.text().strip()) or
+            bool(self.supervisor_name_input.text().strip()) or
+            bool(self.project_notes.toPlainText().strip())
+        )
+
+        if has_data:
+            reply = QMessageBox.warning(
+                self, "Unsaved Data Will Be Lost",
+                "The form currently has data entered.\n\n"
+                "Loading a different project will clear all unsaved fields.\n\n"
+                "Are you sure you want to continue?",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No,
+            )
+            if reply == QMessageBox.No:
+                # Restore the previous selection without re-triggering this slot
+                self.projects_list.blockSignals(True)
+                if self.current_project_id:
+                    for i in range(self.projects_list.count()):
+                        item = self.projects_list.item(i)
+                        if item.data(Qt.UserRole) == self.current_project_id:
+                            self.projects_list.setCurrentItem(item)
+                            break
+                else:
+                    self.projects_list.clearSelection()
+                self.projects_list.blockSignals(False)
+                self._set_status("Project switch cancelled — unsaved data kept.", timeout=4000)
+                return
+
+        self.current_project_id = incoming_id
+        self.refresh_tasks()
+        self.load_project_details()
+        self._set_status(f"Project '{selected_items[0].text()}' loaded.")
     
     def create_project(self):
-        """Create a new project"""
-        # Get values from form
-        name = self.project_name_input.text().strip()
+        """Create a new project after validating all required fields."""
+        name            = self.project_name_input.text().strip()
         supervisor_name = self.supervisor_name_input.text().strip()
-        department = self.department_combo.currentText()
-        
-        # Get project type
+        department      = self.department_combo.currentText()
+        notes           = self.project_notes.toPlainText().strip()
+
+        # Collect all missing fields
+        errors = []
+        if not name:
+            errors.append("Project Name")
+        if not supervisor_name:
+            errors.append("Supervisor Name")
+        if not notes:
+            errors.append("Project Notes")
+
+        if errors:
+            missing = ", ".join(errors)
+            self._set_status(f"Cannot create project — missing required fields: {missing}", timeout=6000)
+            QMessageBox.warning(
+                self, "Required Fields Missing",
+                f"The following fields are required:\n\n"
+                + "\n".join(f"  • {e}" for e in errors)
+            )
+            return
+
+        # Reject duplicate project names (case-insensitive)
+        existing_names = [p.name.lower() for p in self.data_manager.get_all_projects()]
+        if name.lower() in existing_names:
+            self._set_status(f"Cannot create project — \"{name}\" already exists.", timeout=6000)
+            QMessageBox.warning(
+                self, "Duplicate Project Name",
+                f"A project named \"{name}\" already exists.\n\n"
+                "Please choose a different name."
+            )
+            return
+
         if self.animation_radio.isChecked():
             project_type = "Animation"
         elif self.gaming_radio.isChecked():
             project_type = "Gaming"
         else:
             project_type = "VFX"
-        
-        # Get flags
+
         needs_daily_review = self.needs_daily_review_checkbox.isChecked()
-        client_delivery = self.client_delivery_checkbox.isChecked()
-        high_priority = self.high_priority_checkbox.isChecked()
-        
-        if not name:
-            QMessageBox.warning(self, "Warning", "Please enter a project name.")
-            return
-        
+        client_delivery    = self.client_delivery_checkbox.isChecked()
+        high_priority      = self.high_priority_checkbox.isChecked()
+
         self.data_manager.create_project(
             name, supervisor_name, department,
             project_type, needs_daily_review, client_delivery, high_priority,
             priority=self.priority_slider.value(),
             timeline_offset=self.timeline_scroll.value(),
-            completion=self.completion_slider.value()
+            notes=notes,
         )
         self.refresh_projects()
         self.clear_project_details()
-        self._set_status(f"Project '{name}' created.")
+        self._set_status(f"Project '{name}' created successfully.")
     
     def delete_project(self):
         """Delete selected project"""
@@ -367,65 +420,83 @@ class PlannerTab(QWidget):
         if not self.current_project_id:
             return
         project = self.data_manager.get_project_by_id(self.current_project_id)
-        if project:
-            # Snapshot task statuses so the completion slider can restore them
-            self._pre_completion_statuses = {t.id: t.status for t in project.tasks}
-            self.project_name_input.setText(project.name)
-            self.supervisor_name_input.setText(project.supervisor_name)
-            self.department_combo.setCurrentText(project.department)
-            
-            # Load project type
-            if project.project_type == "Animation":
-                self.animation_radio.setChecked(True)
-            elif project.project_type == "Gaming":
-                self.gaming_radio.setChecked(True)
-            else:
-                self.vfx_radio.setChecked(True)
-            
-            # Load flags
-            self.needs_daily_review_checkbox.setChecked(project.needs_daily_review)
-            self.client_delivery_checkbox.setChecked(project.client_delivery)
-            self.high_priority_checkbox.setChecked(project.high_priority)
+        if not project:
+            return
 
-            # Load priority/timeline/completion — block signals to avoid spurious auto-saves on load
-            for _w in (self.priority_slider, self.timeline_scroll, self.completion_slider):
-                _w.blockSignals(True)
-            self.priority_slider.setValue(project.priority)
-            self.timeline_scroll.setValue(project.timeline_offset)
-            self.completion_slider.setValue(project.completion)
-            for _w in (self.priority_slider, self.timeline_scroll, self.completion_slider):
-                _w.blockSignals(False)
-            self.project_notes.setPlainText(project.notes)
-            self.save_btn.setEnabled(True)
+        for w in self._all_form_widgets():
+            w.blockSignals(True)
+
+        self.project_name_input.setText(project.name)
+        self.supervisor_name_input.setText(project.supervisor_name)
+        self.department_combo.setCurrentText(project.department)
+
+        if project.project_type == "Animation":
+            self.animation_radio.setChecked(True)
+        elif project.project_type == "Gaming":
+            self.gaming_radio.setChecked(True)
+        else:
+            self.vfx_radio.setChecked(True)
+
+        self.needs_daily_review_checkbox.setChecked(project.needs_daily_review)
+        self.client_delivery_checkbox.setChecked(project.client_delivery)
+        self.high_priority_checkbox.setChecked(project.high_priority)
+        self.priority_slider.setValue(project.priority)
+        self.timeline_scroll.setValue(project.timeline_offset)
+        self.project_notes.setPlainText(project.notes)
+
+        for w in self._all_form_widgets():
+            w.blockSignals(False)
+
+        self._reset_dirty()
+        self._update_completion_bar()
     
     def clear_project_details(self):
         """Clear project details form fields"""
+        for w in self._all_form_widgets():
+            w.blockSignals(True)
+
         self.project_name_input.clear()
         self.supervisor_name_input.clear()
         self.department_combo.setCurrentIndex(0)
-        self.vfx_radio.setChecked(True)  # Default to VFX
+        self.vfx_radio.setChecked(True)
         self.needs_daily_review_checkbox.setChecked(False)
         self.client_delivery_checkbox.setChecked(False)
         self.high_priority_checkbox.setChecked(False)
-        self.department_combo.setCurrentIndex(0)
         self.priority_slider.setValue(50)
         self.timeline_scroll.setValue(25)
-        self.completion_slider.setValue(25)
+        self.completion_progress.setValue(0)
+        self.completion_progress.setFormat("")
         self.project_notes.clear()
-        self.save_btn.setEnabled(False)
+
+        for w in self._all_form_widgets():
+            w.blockSignals(False)
+
+        self._reset_dirty()
 
     def save_project_details(self):
-        """Persist current form values to the selected project"""
+        """Persist current form values to the selected project, or create a new one."""
+        name = self.project_name_input.text().strip()
+        if not name:
+            QMessageBox.warning(self, "Warning", "Project name cannot be empty.")
+            return
+
+        # No project selected — offer to create a new one
         if not self.current_project_id:
+            reply = QMessageBox.warning(
+                self,
+                "No Project Selected",
+                f"No project is currently selected.\n\n"
+                f"A new project named \"{name}\" will be created.\n\n"
+                f"Do you want to continue?",
+                QMessageBox.Yes | QMessageBox.Cancel,
+                QMessageBox.Cancel,
+            )
+            if reply == QMessageBox.Yes:
+                self.create_project()
             return
 
         project = self.data_manager.get_project_by_id(self.current_project_id)
         if not project:
-            return
-
-        name = self.project_name_input.text().strip()
-        if not name:
-            QMessageBox.warning(self, "Warning", "Project name cannot be empty.")
             return
 
         project.name = name
@@ -444,12 +515,11 @@ class PlannerTab(QWidget):
         project.high_priority = self.high_priority_checkbox.isChecked()
         project.priority = self.priority_slider.value()
         project.timeline_offset = self.timeline_scroll.value()
-        project.completion = self.completion_slider.value()
         project.notes = self.project_notes.toPlainText()
 
         self.data_manager.update_project(project)
         self.refresh_projects()
-
+        self._reset_dirty()
         self._set_status(f"Project '{name}' saved.")
 
     def mark_task_done(self):
@@ -471,7 +541,6 @@ class PlannerTab(QWidget):
         for task in project.tasks:
             if task.id == task_id:
                 task.status = "done"
-                self._pre_completion_statuses[task_id] = "done"
                 self.data_manager.update_task(self.current_project_id, task)
                 self.refresh_tasks()
                 self._set_status(f"Task '{task.name}' marked as done.")
@@ -481,6 +550,37 @@ class PlannerTab(QWidget):
         """Clear the project notes text field"""
         self.project_notes.clear()
         self._set_status("Notes cleared.")
+
+    def _all_form_widgets(self):
+        return (
+            self.project_name_input, self.supervisor_name_input,
+            self.department_combo,
+            self.animation_radio, self.vfx_radio, self.gaming_radio,
+            self.needs_daily_review_checkbox, self.client_delivery_checkbox,
+            self.high_priority_checkbox,
+            self.priority_slider, self.timeline_scroll,
+            self.project_notes,
+        )
+
+    def _connect_dirty_signals(self):
+        self.project_name_input.textChanged.connect(self._mark_dirty)
+        self.supervisor_name_input.textChanged.connect(self._mark_dirty)
+        self.department_combo.currentIndexChanged.connect(self._mark_dirty)
+        self.animation_radio.toggled.connect(self._mark_dirty)
+        self.vfx_radio.toggled.connect(self._mark_dirty)
+        self.gaming_radio.toggled.connect(self._mark_dirty)
+        self.needs_daily_review_checkbox.stateChanged.connect(self._mark_dirty)
+        self.client_delivery_checkbox.stateChanged.connect(self._mark_dirty)
+        self.high_priority_checkbox.stateChanged.connect(self._mark_dirty)
+        self.priority_slider.valueChanged.connect(self._mark_dirty)
+        self.timeline_scroll.valueChanged.connect(self._mark_dirty)
+        self.project_notes.textChanged.connect(self._mark_dirty)
+
+    def _mark_dirty(self, *_):
+        self.save_btn.setEnabled(True)
+
+    def _reset_dirty(self):
+        self.save_btn.setEnabled(False)
 
     def _auto_save_priority(self):
         if not self.current_project_id:
@@ -500,27 +600,22 @@ class PlannerTab(QWidget):
             self.data_manager.update_project(project)
             self._set_status(f"Timeline offset set to {project.timeline_offset}.")
 
-    def _on_completion_released(self):
+    def _update_completion_bar(self):
+        """Recompute the completion progress bar from actual task statuses."""
         if not self.current_project_id:
+            self.completion_progress.setValue(0)
+            self.completion_progress.setFormat("")
             return
         project = self.data_manager.get_project_by_id(self.current_project_id)
-        if not project:
+        if not project or not project.tasks:
+            self.completion_progress.setValue(0)
+            self.completion_progress.setFormat("No tasks" if project else "")
             return
-        project.completion = self.completion_slider.value()
-        if project.completion == 100:
-            for task in project.tasks:
-                task.status = "done"
-            self.data_manager.update_project(project)
-            self.refresh_tasks()
-            self._set_status("All tasks marked as done — project 100% complete.")
-        else:
-            if self._pre_completion_statuses:
-                for task in project.tasks:
-                    if task.id in self._pre_completion_statuses:
-                        task.status = self._pre_completion_statuses[task.id]
-            self.data_manager.update_project(project)
-            self.refresh_tasks()
-            self._set_status(f"Completion set to {project.completion}%.")
+        total = len(project.tasks)
+        done = sum(1 for t in project.tasks if t.status == "done")
+        pct = int((done / total) * 100)
+        self.completion_progress.setValue(pct)
+        self.completion_progress.setFormat(f"%p%  ({done}/{total})")
 
     def _set_status(self, message: str, timeout: int = 3000):
         if self.parent_window:
