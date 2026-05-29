@@ -16,7 +16,7 @@ from src.data_manager import DataManager
 class _CollapsibleSection(QWidget):
     """A titled header button that shows/hides its content area on click."""
 
-    def __init__(self, title: str, parent=None):
+    def __init__(self, title: str, expanded: bool = True, parent=None):
         super().__init__(parent)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -25,11 +25,11 @@ class _CollapsibleSection(QWidget):
         self._title = title
         self._toggle_btn = QPushButton()
         self._toggle_btn.setCheckable(True)
-        self._toggle_btn.setChecked(True)
+        self._toggle_btn.setChecked(expanded)
         self._toggle_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self._toggle_btn.setFixedHeight(32)
         self._toggle_btn.clicked.connect(self._on_toggle)
-        self._update_label(True)
+        self._update_label(expanded)
         layout.addWidget(self._toggle_btn)
 
         self._body = QWidget()
@@ -37,6 +37,7 @@ class _CollapsibleSection(QWidget):
         body_outer.setContentsMargins(0, 4, 0, 4)
         body_outer.setSpacing(6)
         self.body_layout = body_outer          # callers add content here
+        self._body.setVisible(expanded)
         layout.addWidget(self._body)
 
     def _update_label(self, expanded: bool):
@@ -181,7 +182,7 @@ class SummaryTab(QWidget):
         inner_layout.addWidget(divider)
 
         # ── STUDIO SUMMARY (collapsible) ──────────────────────────────────
-        studio_section = _CollapsibleSection("Studio Summary")
+        studio_section = _CollapsibleSection("Studio Summary", expanded=False)
         sl = studio_section.body_layout
 
         studio_top_row = QHBoxLayout()

@@ -15,12 +15,48 @@
       "notes": "Client delivery deadline end of June. Fire and smoke sims need to match director's reference reel from pre-viz.",
       "created_date": "2026-05-01",
       "tasks": [
-        {"id": "task_d01", "name": "Fire simulation — wide shot", "status": "done", "priority": "high", "created_date": "2026-05-01"},
-        {"id": "task_d02", "name": "Smoke trail — hero dragon", "status": "done", "priority": "high", "created_date": "2026-05-02"},
-        {"id": "task_d03", "name": "Secondary debris pass", "status": "done", "priority": "high", "created_date": "2026-05-05"},
-        {"id": "task_d04", "name": "Ground impact dust sim", "status": "in-progress", "priority": "medium", "created_date": "2026-05-06"},
-        {"id": "task_d05", "name": "Render — FX passes", "status": "pending", "priority": "high", "created_date": "2026-05-07"},
-        {"id": "task_d06", "name": "Comp integration review", "status": "pending", "priority": "medium", "created_date": "2026-05-08"}
+        {
+          "id": "task_d01",
+          "name": "Fire simulation — wide shot",
+          "status": "done",
+          "priority": "high",
+          "created_date": "2026-05-01"
+        },
+        {
+          "id": "task_d02",
+          "name": "Smoke trail — hero dragon",
+          "status": "done",
+          "priority": "high",
+          "created_date": "2026-05-02"
+        },
+        {
+          "id": "task_d03",
+          "name": "Secondary debris pass",
+          "status": "done",
+          "priority": "high",
+          "created_date": "2026-05-05"
+        },
+        {
+          "id": "task_d04",
+          "name": "Ground impact dust sim",
+          "status": "in-progress",
+          "priority": "medium",
+          "created_date": "2026-05-06"
+        },
+        {
+          "id": "task_d05",
+          "name": "Render — FX passes",
+          "status": "pending",
+          "priority": "high",
+          "created_date": "2026-05-07"
+        },
+        {
+          "id": "task_d06",
+          "name": "Comp integration review",
+          "status": "pending",
+          "priority": "medium",
+          "created_date": "2026-05-08"
+        }
       ]
     },
     {
@@ -38,13 +74,55 @@
       "notes": "Body rig approved. Focus on facial controls and facial correctives before handoff to Animation.",
       "created_date": "2026-05-10",
       "tasks": [
-        {"id": "task_m01", "name": "Body rig — joint placement", "status": "done", "priority": "high", "created_date": "2026-05-10"},
-        {"id": "task_m02", "name": "IK/FK switching — arms", "status": "done", "priority": "high", "created_date": "2026-05-11"},
-        {"id": "task_m03", "name": "IK/FK switching — legs", "status": "done", "priority": "high", "created_date": "2026-05-12"},
-        {"id": "task_m04", "name": "Facial control rig", "status": "in-progress", "priority": "medium", "created_date": "2026-05-14"},
-        {"id": "task_m05", "name": "Corrective blend shapes", "status": "pending", "priority": "medium", "created_date": "2026-05-15"},
-        {"id": "task_m06", "name": "Skinning weight paint — full body", "status": "pending", "priority": "high", "created_date": "2026-05-16"},
-        {"id": "task_m07", "name": "Rig QA — animation department sign-off", "status": "pending", "priority": "medium", "created_date": "2026-05-17"}
+        {
+          "id": "task_m01",
+          "name": "Body rig — joint placement",
+          "status": "done",
+          "priority": "high",
+          "created_date": "2026-05-10"
+        },
+        {
+          "id": "task_m02",
+          "name": "IK/FK switching — arms",
+          "status": "done",
+          "priority": "high",
+          "created_date": "2026-05-11"
+        },
+        {
+          "id": "task_m03",
+          "name": "IK/FK switching — legs",
+          "status": "done",
+          "priority": "high",
+          "created_date": "2026-05-12"
+        },
+        {
+          "id": "task_m04",
+          "name": "Facial control rig",
+          "status": "in-progress",
+          "priority": "medium",
+          "created_date": "2026-05-14"
+        },
+        {
+          "id": "task_m05",
+          "name": "Corrective blend shapes",
+          "status": "pending",
+          "priority": "medium",
+          "created_date": "2026-05-15"
+        },
+        {
+          "id": "task_m06",
+          "name": "Skinning weight paint — full body",
+          "status": "pending",
+          "priority": "high",
+          "created_date": "2026-05-16"
+        },
+        {
+          "id": "task_m07",
+          "name": "Rig QA — animation department sign-off",
+          "status": "pending",
+          "priority": "medium",
+          "created_date": "2026-05-17"
+        }
       ]
     },
     {
@@ -56,17 +134,47 @@
       "needs_daily_review": true,
       "client_delivery": true,
       "high_priority": true,
-      "priority": 80,
-      "timeline_offset": 35,
+      "priority": 50,
+      "timeline_offset": 71,
       "completion": 0,
       "notes": "Scene 07 and Scene 12 are locked. Scene 15 requires re-animation after editorial cut change. Needs dailies every morning.",
       "created_date": "2026-05-12",
       "tasks": [
-        {"id": "task_c01", "name": "Scene 07 — hero run cycle", "status": "done", "priority": "high", "created_date": "2026-05-12"},
-        {"id": "task_c02", "name": "Scene 12 — crowd layout", "status": "done", "priority": "medium", "created_date": "2026-05-13"},
-        {"id": "task_c03", "name": "Scene 15 — re-animation (cut v2)", "status": "in-progress", "priority": "high", "created_date": "2026-05-15"},
-        {"id": "task_c04", "name": "Facial animation — lead actor", "status": "in-progress", "priority": "high", "created_date": "2026-05-16"},
-        {"id": "task_c05", "name": "Secondary motion — jacket, hair", "status": "pending", "priority": "medium", "created_date": "2026-05-18"}
+        {
+          "id": "task_c01",
+          "name": "Scene 07 — hero run cycle",
+          "status": "done",
+          "priority": "high",
+          "created_date": "2026-05-12"
+        },
+        {
+          "id": "task_c02",
+          "name": "Scene 12 — crowd layout",
+          "status": "done",
+          "priority": "medium",
+          "created_date": "2026-05-13"
+        },
+        {
+          "id": "task_c03",
+          "name": "Scene 15 — re-animation (cut v2)",
+          "status": "in-progress",
+          "priority": "high",
+          "created_date": "2026-05-15"
+        },
+        {
+          "id": "task_c04",
+          "name": "Facial animation — lead actor",
+          "status": "in-progress",
+          "priority": "high",
+          "created_date": "2026-05-16"
+        },
+        {
+          "id": "task_c05",
+          "name": "Secondary motion — jacket, hair",
+          "status": "pending",
+          "priority": "medium",
+          "created_date": "2026-05-18"
+        }
       ]
     },
     {
@@ -84,13 +192,55 @@
       "notes": "All hero props modelled. Texture pass in progress. LODs needed for real-time engine delivery.",
       "created_date": "2026-05-18",
       "tasks": [
-        {"id": "task_e01", "name": "Hero prop — neon sign modelling", "status": "done", "priority": "medium", "created_date": "2026-05-18"},
-        {"id": "task_e02", "name": "Hero prop — street vendor cart", "status": "done", "priority": "medium", "created_date": "2026-05-19"},
-        {"id": "task_e03", "name": "PBR texturing — neon sign", "status": "done", "priority": "high", "created_date": "2026-05-20"},
-        {"id": "task_e04", "name": "PBR texturing — vendor cart", "status": "done", "priority": "high", "created_date": "2026-05-21"},
-        {"id": "task_e05", "name": "LOD generation — all hero props", "status": "pending", "priority": "high", "created_date": "2026-05-22"},
-        {"id": "task_e06", "name": "Background building kit — modular", "status": "pending", "priority": "medium", "created_date": "2026-05-23"},
-        {"id": "task_e07", "name": "Asset publish to pipeline", "status": "pending", "priority": "medium", "created_date": "2026-05-24"}
+        {
+          "id": "task_e01",
+          "name": "Hero prop — neon sign modelling",
+          "status": "done",
+          "priority": "medium",
+          "created_date": "2026-05-18"
+        },
+        {
+          "id": "task_e02",
+          "name": "Hero prop — street vendor cart",
+          "status": "done",
+          "priority": "medium",
+          "created_date": "2026-05-19"
+        },
+        {
+          "id": "task_e03",
+          "name": "PBR texturing — neon sign",
+          "status": "done",
+          "priority": "high",
+          "created_date": "2026-05-20"
+        },
+        {
+          "id": "task_e04",
+          "name": "PBR texturing — vendor cart",
+          "status": "done",
+          "priority": "high",
+          "created_date": "2026-05-21"
+        },
+        {
+          "id": "task_e05",
+          "name": "LOD generation — all hero props",
+          "status": "pending",
+          "priority": "high",
+          "created_date": "2026-05-22"
+        },
+        {
+          "id": "task_e06",
+          "name": "Background building kit — modular",
+          "status": "pending",
+          "priority": "medium",
+          "created_date": "2026-05-23"
+        },
+        {
+          "id": "task_e07",
+          "name": "Asset publish to pipeline",
+          "status": "pending",
+          "priority": "medium",
+          "created_date": "2026-05-24"
+        }
       ]
     }
   ]

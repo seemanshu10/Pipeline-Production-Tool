@@ -2,13 +2,14 @@
 
 from PySide2.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QSplitter, QGroupBox,
-    QListView, QTableView, QTreeWidget, QTreeWidgetItem,
+    QListWidget, QListWidgetItem, QTableWidget, QTableWidgetItem,
+    QTreeWidget, QTreeWidgetItem,
     QHeaderView, QAbstractItemView, QPushButton
 )
 from PySide2.QtCore import Qt
 
 from src.data_manager import DataManager
-from src.models.asset_models import AssetListModel, ShotTableModel, DEPARTMENT_TREE
+from src.models.asset_models import SHOT_HEADERS, DEPARTMENT_TREE
 
 
 class AssetsTab(QWidget):
@@ -24,52 +25,40 @@ class AssetsTab(QWidget):
 
     def init_ui(self):
         layout = QVBoxLayout()
-
         splitter = QSplitter(Qt.Horizontal)
 
-        # ------------------------------------------------------------------
-        # Panel 1 — Published Assets
-        # ------------------------------------------------------------------
+        # ── Panel 1 — Published Assets ────────────────────────────────────
         assets_group = QGroupBox("Published Assets")
         assets_layout = QVBoxLayout()
 
-        self.asset_list_model = AssetListModel()
-        self.asset_list_view = QListView()
-        self.asset_list_view.setModel(self.asset_list_model)
-        self.asset_list_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
-
-        assets_layout.addWidget(self.asset_list_view)
+        self.asset_list = QListWidget()
+        self.asset_list.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        assets_layout.addWidget(self.asset_list)
         assets_group.setLayout(assets_layout)
 
-        # ------------------------------------------------------------------
-        # Panel 2 — Shot Tracking
-        # ------------------------------------------------------------------
+        # ── Panel 2 — Shot Tracking ───────────────────────────────────────
         shots_group = QGroupBox("Shot Tracking")
         shots_layout = QVBoxLayout()
 
-        self.shot_table_model = ShotTableModel()
-        self.shot_table_view = QTableView()
-        self.shot_table_view.setModel(self.shot_table_model)
-        self.shot_table_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.shot_table_view.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.shot_table_view.setAlternatingRowColors(True)
-        self.shot_table_view.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.shot_table_view.verticalHeader().setVisible(False)
-
-        shots_layout.addWidget(self.shot_table_view)
+        self.shot_table = QTableWidget()
+        self.shot_table.setColumnCount(len(SHOT_HEADERS))
+        self.shot_table.setHorizontalHeaderLabels(SHOT_HEADERS)
+        self.shot_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.shot_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.shot_table.setAlternatingRowColors(True)
+        self.shot_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.shot_table.verticalHeader().setVisible(False)
+        shots_layout.addWidget(self.shot_table)
         shots_group.setLayout(shots_layout)
 
-        # ------------------------------------------------------------------
-        # Panel 3 — Department Hierarchy
-        # ------------------------------------------------------------------
+        # ── Panel 3 — Department Hierarchy ────────────────────────────────
         dept_group = QGroupBox("Department Hierarchy")
         dept_layout = QVBoxLayout()
 
-        # Toggle button row
         tree_toolbar = QHBoxLayout()
         self.tree_toggle_btn = QPushButton("Collapse All")
         self.tree_toggle_btn.setCheckable(True)
-        self.tree_toggle_btn.setChecked(True)   # tree starts expanded
+        self.tree_toggle_btn.setChecked(True)
         self.tree_toggle_btn.setFixedHeight(36)
         self.tree_toggle_btn.setMinimumWidth(120)
         self.tree_toggle_btn.toggled.connect(self._on_tree_toggle)
@@ -82,13 +71,9 @@ class AssetsTab(QWidget):
         self.dept_tree.setAnimated(True)
         self.dept_tree.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self._populate_department_tree()
-
         dept_layout.addWidget(self.dept_tree)
         dept_group.setLayout(dept_layout)
 
-        # ------------------------------------------------------------------
-        # Assemble splitter
-        # ------------------------------------------------------------------
         splitter.addWidget(assets_group)
         splitter.addWidget(shots_group)
         splitter.addWidget(dept_group)
@@ -98,35 +83,27 @@ class AssetsTab(QWidget):
         self.setLayout(layout)
 
     def _connect_signals(self):
-        self.asset_list_view.selectionModel().selectionChanged.connect(
-            self.on_asset_selection_changed
-        )
-        self.shot_table_view.selectionModel().selectionChanged.connect(
-            self.on_shot_selection_changed
-        )
+        self.asset_list.currentItemChanged.connect(self._on_asset_selected)
+        self.shot_table.itemSelectionChanged.connect(self._on_shot_selected)
 
-    def on_asset_selection_changed(self, selected, deselected):
-        indexes = selected.indexes()
-        if not indexes:
+    def _on_asset_selected(self, current, previous):
+        if not current:
             if self.parent_window:
                 self.parent_window.statusBar().clearMessage()
             return
-        display = self.asset_list_model.data(indexes[0], Qt.DisplayRole)
         if self.parent_window:
-            self.parent_window.statusBar().showMessage(f"Asset:  {display}")
+            self.parent_window.statusBar().showMessage(f"Asset:  {current.text()}")
 
-    def on_shot_selection_changed(self, selected, deselected):
-        indexes = selected.indexes()
-        if not indexes:
+    def _on_shot_selected(self):
+        row = self.shot_table.currentRow()
+        if row < 0:
             if self.parent_window:
                 self.parent_window.statusBar().clearMessage()
             return
-        row = indexes[0].row()
-        m = self.shot_table_model
-        shot   = m.data(m.index(row, 0))
-        dept   = m.data(m.index(row, 1))
-        status = m.data(m.index(row, 2))
-        due    = m.data(m.index(row, 3))
+        shot   = self.shot_table.item(row, 0).text()
+        dept   = self.shot_table.item(row, 1).text()
+        status = self.shot_table.item(row, 2).text()
+        due    = self.shot_table.item(row, 3).text()
         if self.parent_window:
             self.parent_window.statusBar().showMessage(
                 f"Shot: {shot}  |  Dept: {dept}  |  Status: {status}  |  Due: {due}"
@@ -139,7 +116,6 @@ class AssetsTab(QWidget):
         else:
             self.dept_tree.collapseAll()
             self.tree_toggle_btn.setText("Expand All")
-      
 
     def _populate_department_tree(self):
         self.dept_tree.clear()
@@ -158,8 +134,18 @@ class AssetsTab(QWidget):
         self.dept_tree.expandAll()
 
     def refresh(self):
-        assets = self.data_manager.get_all_assets()
-        self.asset_list_model.refresh(assets)
+        # Assets
+        self.asset_list.clear()
+        for asset in self.data_manager.get_all_assets():
+            item = QListWidgetItem(f"{asset.name}  [{asset.asset_type}]")
+            item.setData(Qt.UserRole, asset.id)
+            self.asset_list.addItem(item)
 
+        # Shots
         shots = self.data_manager.get_all_shots()
-        self.shot_table_model.refresh([s.to_dict() for s in shots])
+        self.shot_table.setRowCount(len(shots))
+        for row, shot in enumerate(shots):
+            self.shot_table.setItem(row, 0, QTableWidgetItem(shot.shot))
+            self.shot_table.setItem(row, 1, QTableWidgetItem(shot.department))
+            self.shot_table.setItem(row, 2, QTableWidgetItem(shot.status))
+            self.shot_table.setItem(row, 3, QTableWidgetItem(shot.due_date))
