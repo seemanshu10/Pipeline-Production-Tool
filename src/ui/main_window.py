@@ -9,6 +9,7 @@ from src.data_manager import DataManager
 from src.ui.planner_tab import PlannerTab
 from src.ui.assets_tab import AssetsTab
 from src.ui.summary_tab import SummaryTab
+from src.constants import APP_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT
 
 
 class MainWindow(QMainWindow):
@@ -21,8 +22,8 @@ class MainWindow(QMainWindow):
         self.data_manager = DataManager()
         
         # Set window properties
-        self.setWindowTitle("VFX Pipeline Production Tool")
-        self.setGeometry(100, 100, 1200, 900)
+        self.setWindowTitle(APP_TITLE)
+        self.setGeometry(100, 100, WINDOW_WIDTH, WINDOW_HEIGHT)
         
         # Create menu bar
         self.create_menu_bar()
@@ -142,8 +143,8 @@ class MainWindow(QMainWindow):
         """Show about dialog"""
         QMessageBox.about(
             self,
-            "About VFX Pipeline Production Tool",
-            "VFX Pipeline Production Tool v1.0\n\n"
+            f"About {APP_TITLE}",
+            f"{APP_TITLE} v1.0\n\n"
             "A modular PySide2 desktop application for managing VFX projects, "
             "tasks, and assets.\n\n"
             "© 2026 VFX Pipeline Team"

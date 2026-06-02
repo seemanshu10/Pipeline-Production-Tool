@@ -10,6 +10,7 @@ from PySide2.QtWidgets import (
 from PySide2.QtCore import Qt
 
 from src.data_manager import DataManager
+from src.constants import DEPARTMENTS, DEFAULT_PRIORITY, DEFAULT_TIMELINE_OFFSET
 
 
 class PlannerTab(QWidget):
@@ -46,7 +47,7 @@ class PlannerTab(QWidget):
         
         # Department ComboBox
         self.department_combo = QComboBox()
-        self.department_combo.addItems(["Rig", "FX", "Animation", "Assets"])
+        self.department_combo.addItems(DEPARTMENTS)
         details_layout.addRow("Department:", self.department_combo)
         
         details_group.setLayout(details_layout)
@@ -95,8 +96,8 @@ class PlannerTab(QWidget):
         self.priority_slider = QSlider(Qt.Horizontal)
         self.priority_slider.setMinimum(0)
         self.priority_slider.setMaximum(100)
-        self.priority_slider.setValue(50)
-        self.priority_value_label = QLabel("50")
+        self.priority_slider.setValue(DEFAULT_PRIORITY)
+        self.priority_value_label = QLabel(str(DEFAULT_PRIORITY))
         self.priority_slider.valueChanged.connect(lambda v: self.priority_value_label.setText(str(v)))
         self.priority_slider.sliderReleased.connect(self._auto_save_priority)
         priority_row.addWidget(QLabel("Priority:"))
@@ -109,8 +110,8 @@ class PlannerTab(QWidget):
         self.timeline_scroll = QScrollBar(Qt.Horizontal)
         self.timeline_scroll.setMinimum(0)
         self.timeline_scroll.setMaximum(100)
-        self.timeline_scroll.setValue(25)
-        self.timeline_value_label = QLabel("25")
+        self.timeline_scroll.setValue(DEFAULT_TIMELINE_OFFSET)
+        self.timeline_value_label = QLabel(str(DEFAULT_TIMELINE_OFFSET))
         self.timeline_scroll.valueChanged.connect(lambda v: self.timeline_value_label.setText(str(v)))
         self.timeline_scroll.sliderReleased.connect(self._auto_save_timeline)
         timeline_row.addWidget(QLabel("Timeline Offset:"))
@@ -276,7 +277,6 @@ class PlannerTab(QWidget):
         if has_data:
             reply = QMessageBox.warning(
                 self, "Unsaved Data Will Be Lost",
-                "The form currently has data entered.\n\n"
                 "Loading a different project will clear all unsaved fields.\n\n"
                 "Are you sure you want to continue?",
                 QMessageBox.Yes | QMessageBox.No,
@@ -463,8 +463,8 @@ class PlannerTab(QWidget):
         self.needs_daily_review_checkbox.setChecked(False)
         self.client_delivery_checkbox.setChecked(False)
         self.high_priority_checkbox.setChecked(False)
-        self.priority_slider.setValue(50)
-        self.timeline_scroll.setValue(25)
+        self.priority_slider.setValue(DEFAULT_PRIORITY)
+        self.timeline_scroll.setValue(DEFAULT_TIMELINE_OFFSET)
         self.completion_progress.setValue(0)
         self.completion_progress.setFormat("")
         self.project_notes.clear()

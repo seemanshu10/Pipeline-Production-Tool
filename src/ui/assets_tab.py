@@ -9,7 +9,7 @@ from PySide2.QtWidgets import (
 from PySide2.QtCore import Qt
 
 from src.data_manager import DataManager
-from src.models.asset_models import SHOT_HEADERS, DEPARTMENT_TREE
+from src.constants import SHOT_HEADERS, DEPARTMENT_TREE
 
 
 class AssetsTab(QWidget):

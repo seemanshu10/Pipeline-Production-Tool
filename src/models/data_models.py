@@ -4,29 +4,38 @@ from dataclasses import dataclass, field, asdict
 from typing import List
 from datetime import datetime
 
+from src.constants import (
+    DATE_FORMAT,
+    DEFAULT_DEPARTMENT, DEFAULT_PROJECT_TYPE,
+    DEFAULT_TASK_STATUS, DEFAULT_TASK_PRIORITY,
+    DEFAULT_ASSET_TYPE,
+    DEFAULT_SHOT_DEPARTMENT, DEFAULT_SHOT_STATUS,
+    DEFAULT_PRIORITY, DEFAULT_TIMELINE_OFFSET, DEFAULT_COMPLETION,
+)
+
 
 @dataclass
 class Task:
     """Task data model"""
     id: str
     name: str
-    status: str = "pending"  # pending, in-progress, done
-    priority: str = "medium"  # low, medium, high
-    created_date: str = field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
-    
+    status: str = DEFAULT_TASK_STATUS
+    priority: str = DEFAULT_TASK_PRIORITY
+    created_date: str = field(default_factory=lambda: datetime.now().strftime(DATE_FORMAT))
+
     def to_dict(self):
         """Convert to dictionary"""
         return asdict(self)
-    
+
     @staticmethod
     def from_dict(data: dict):
         """Create from dictionary"""
         return Task(
             id=data.get("id"),
             name=data.get("name"),
-            status=data.get("status", "pending"),
-            priority=data.get("priority", "medium"),
-            created_date=data.get("created_date", datetime.now().strftime("%Y-%m-%d"))
+            status=data.get("status", DEFAULT_TASK_STATUS),
+            priority=data.get("priority", DEFAULT_TASK_PRIORITY),
+            created_date=data.get("created_date", datetime.now().strftime(DATE_FORMAT))
         )
 
 
@@ -36,16 +45,16 @@ class Project:
     id: str
     name: str
     supervisor_name: str = ""
-    department: str = "Rig"  # Rig, FX, Animation, Assets
-    project_type: str = "VFX"  # Animation, VFX, Gaming
+    department: str = DEFAULT_DEPARTMENT
+    project_type: str = DEFAULT_PROJECT_TYPE
     needs_daily_review: bool = False
     client_delivery: bool = False
     high_priority: bool = False
-    priority: int = 50
-    timeline_offset: int = 25
-    completion: int = 25
+    priority: int = DEFAULT_PRIORITY
+    timeline_offset: int = DEFAULT_TIMELINE_OFFSET
+    completion: int = DEFAULT_COMPLETION
     notes: str = ""
-    created_date: str = field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
+    created_date: str = field(default_factory=lambda: datetime.now().strftime(DATE_FORMAT))
     tasks: List[Task] = field(default_factory=list)
     
     def to_dict(self):
@@ -75,16 +84,16 @@ class Project:
             id=data.get("id"),
             name=data.get("name"),
             supervisor_name=data.get("supervisor_name", ""),
-            department=data.get("department", "Rig"),
-            project_type=data.get("project_type", "VFX"),
+            department=data.get("department", DEFAULT_DEPARTMENT),
+            project_type=data.get("project_type", DEFAULT_PROJECT_TYPE),
             needs_daily_review=data.get("needs_daily_review", False),
             client_delivery=data.get("client_delivery", False),
             high_priority=data.get("high_priority", False),
-            priority=data.get("priority", 50),
-            timeline_offset=data.get("timeline_offset", 25),
-            completion=data.get("completion", 25),
+            priority=data.get("priority", DEFAULT_PRIORITY),
+            timeline_offset=data.get("timeline_offset", DEFAULT_TIMELINE_OFFSET),
+            completion=data.get("completion", DEFAULT_COMPLETION),
             notes=data.get("notes", ""),
-            created_date=data.get("created_date", datetime.now().strftime("%Y-%m-%d")),
+            created_date=data.get("created_date", datetime.now().strftime(DATE_FORMAT)),
             tasks=tasks
         )
 
@@ -94,8 +103,8 @@ class Asset:
     """Asset data model"""
     id: str
     name: str
-    asset_type: str = "model"  # model, texture, animation, etc.
-    created_date: str = field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
+    asset_type: str = DEFAULT_ASSET_TYPE
+    created_date: str = field(default_factory=lambda: datetime.now().strftime(DATE_FORMAT))
 
     def to_dict(self):
         """Convert to dictionary"""
@@ -112,8 +121,8 @@ class Asset:
         return Asset(
             id=data.get("id"),
             name=data.get("name"),
-            asset_type=data.get("type", "model"),
-            created_date=data.get("created_date", datetime.now().strftime("%Y-%m-%d"))
+            asset_type=data.get("type", DEFAULT_ASSET_TYPE),
+            created_date=data.get("created_date", datetime.now().strftime(DATE_FORMAT))
         )
 
 
@@ -122,8 +131,8 @@ class Shot:
     """Shot tracking data model"""
     id: str
     shot: str
-    department: str = "FX"
-    status: str = "Pending"
+    department: str = DEFAULT_SHOT_DEPARTMENT
+    status: str = DEFAULT_SHOT_STATUS
     due_date: str = ""
 
     def to_dict(self):
@@ -140,7 +149,7 @@ class Shot:
         return Shot(
             id=data.get("id", ""),
             shot=data.get("shot", ""),
-            department=data.get("department", "FX"),
-            status=data.get("status", "Pending"),
+            department=data.get("department", DEFAULT_SHOT_DEPARTMENT),
+            status=data.get("status", DEFAULT_SHOT_STATUS),
             due_date=data.get("due_date", ""),
         )

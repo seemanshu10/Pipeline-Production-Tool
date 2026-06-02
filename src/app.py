@@ -8,7 +8,7 @@ from src.ui.main_window import MainWindow
 
 
 def _load_stylesheet() -> str:
-    qss_path = Path(__file__).parent.parent / "resources" / "style.qss"
+    qss_path = Path(__file__).parent / "resources" / "style.qss"
     try:
         return qss_path.read_text(encoding="utf-8")
     except OSError:

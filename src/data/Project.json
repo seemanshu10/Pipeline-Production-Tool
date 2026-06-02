@@ -257,7 +257,36 @@
       "completion": 0,
       "notes": "New Test Project",
       "created_date": "2026-06-02",
-      "tasks": []
+      "tasks": [
+        {
+          "id": "task_21fc22ae",
+          "name": "New Task ",
+          "status": "pending",
+          "priority": "medium",
+          "created_date": "2026-06-02"
+        },
+        {
+          "id": "task_4621041c",
+          "name": "Task 2 ",
+          "status": "pending",
+          "priority": "medium",
+          "created_date": "2026-06-02"
+        },
+        {
+          "id": "task_9f10b835",
+          "name": "Task 3 ",
+          "status": "pending",
+          "priority": "medium",
+          "created_date": "2026-06-02"
+        },
+        {
+          "id": "task_4964",
+          "name": "Task 4 ",
+          "status": "pending",
+          "priority": "medium",
+          "created_date": "2026-06-02"
+        }
+      ]
     }
   ]
 }

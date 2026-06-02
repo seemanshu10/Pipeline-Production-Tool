@@ -6,38 +6,26 @@ from typing import Dict, List
 import uuid
 
 from src.models.data_models import Project, Task, Asset, Shot
+from src.constants import PROJECTS_FILE, ASSETS_SHOTS_FILE, DEFAULT_SHOTS
 
-
-_PROJECTS_FILE     = "data/Project.json"
-_ASSETS_SHOTS_FILE = "data/production.json"
-
-_DEFAULT_SHOTS = [
-    {"id": "shot_001", "shot": "SH010", "department": "FX",        "status": "In Progress", "due_date": "2026-06-15"},
-    {"id": "shot_002", "shot": "SH020", "department": "Rig",        "status": "Pending",     "due_date": "2026-06-20"},
-    {"id": "shot_003", "shot": "SH030", "department": "Animation",  "status": "Done",        "due_date": "2026-05-30"},
-    {"id": "shot_004", "shot": "SH040", "department": "Assets",     "status": "Pending",     "due_date": "2026-07-01"},
-    {"id": "shot_005", "shot": "SH050", "department": "FX",         "status": "In Progress", "due_date": "2026-06-28"},
-    {"id": "shot_006", "shot": "SH060", "department": "Animation",  "status": "Pending",     "due_date": "2026-07-10"},
-    {"id": "shot_007", "shot": "SH070", "department": "Rig",        "status": "Done",        "due_date": "2026-05-25"},
-]
+# Resolve data paths relative to this file (src/) so they work regardless of CWD
+_SRC_DIR = os.path.dirname(__file__)
+_DEFAULT_PROJECTS_FILE     = os.path.join(_SRC_DIR, PROJECTS_FILE)
+_DEFAULT_ASSETS_SHOTS_FILE = os.path.join(_SRC_DIR, ASSETS_SHOTS_FILE)
 
 
 class DataManager:
     """Handles all data persistence.
 
-    Projects are stored in pipeline_projects.json and exposed via
-    open/save dialogs so the user can manage them freely.
-
-    Assets and shots are stored in pipeline_assets_shots.json which is
-    managed internally by the app and never exposed to user file dialogs.
+    Projects are stored in Project.json and exposed via open/save dialogs.
+    Assets and shots are stored in production.json, managed internally.
     """
 
     def __init__(self,
-                 projects_file: str = _PROJECTS_FILE,
-                 assets_shots_file: str = _ASSETS_SHOTS_FILE):
+                 projects_file: str = _DEFAULT_PROJECTS_FILE,
+                 assets_shots_file: str = _DEFAULT_ASSETS_SHOTS_FILE):
         self.projects_file     = projects_file
         self.assets_shots_file = assets_shots_file
-
         self._projects_data    = self._load_projects()
         self._static_data      = self._load_static()
 
@@ -51,30 +39,28 @@ class DataManager:
         if d:
             os.makedirs(d, exist_ok=True)
 
-    def _load_projects(self) -> Dict:
-        self._ensure_dir(self.projects_file)
-        if os.path.exists(self.projects_file):
+    def _load_json(self, filepath: str) -> dict | None:
+        """Read a JSON file and return its contents, or None on any failure."""
+        self._ensure_dir(filepath)
+        if os.path.exists(filepath):
             try:
-                with open(self.projects_file, "r", encoding="utf-8") as f:
+                with open(filepath, "r", encoding="utf-8") as f:
                     return json.load(f)
             except (json.JSONDecodeError, IOError):
-                print(f"Could not read {self.projects_file}, starting fresh.")
-        return {"projects": []}
+                print(f"Could not read {filepath}, starting fresh.")
+        return None
+
+    def _load_projects(self) -> Dict:
+        return self._load_json(self.projects_file) or {"projects": []}
 
     def _load_static(self) -> Dict:
-        self._ensure_dir(self.assets_shots_file)
-        if os.path.exists(self.assets_shots_file):
-            try:
-                with open(self.assets_shots_file, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                if "shots" not in data:
-                    data["shots"] = list(_DEFAULT_SHOTS)
-                    self._write_json(self.assets_shots_file, data)
-                return data
-            except (json.JSONDecodeError, IOError):
-                print(f"Could not read {self.assets_shots_file}, starting fresh.")
-        data = {"assets": [], "shots": list(_DEFAULT_SHOTS)}
-        self._write_json(self.assets_shots_file, data)
+        data = self._load_json(self.assets_shots_file)
+        if data is None:
+            data = {"assets": [], "shots": list(DEFAULT_SHOTS)}
+            self._write_json(self.assets_shots_file, data)
+        elif "shots" not in data:
+            data["shots"] = list(DEFAULT_SHOTS)
+            self._write_json(self.assets_shots_file, data)
         return data
 
     @staticmethod
@@ -85,12 +71,6 @@ class DataManager:
                 json.dump(data, f, indent=2, ensure_ascii=False)
         except IOError as e:
             print(f"Error saving {filepath}: {e}")
-
-    def _save_projects(self):
-        self._write_json(self.projects_file, self._projects_data)
-
-    def _save_static(self):
-        self._write_json(self.assets_shots_file, self._static_data)
 
     # ──────────────────────────────────────────────────────────────────────
     # User-facing file operations (projects only)
@@ -138,7 +118,7 @@ class DataManager:
                        timeline_offset: int = 25, completion: int = 0,
                        notes: str = "") -> Project:
         project = Project(
-            id=f"proj_{uuid.uuid4().hex[:8]}",
+            id=f"proj_{uuid.uuid4().hex[:4]}",
             name=name, supervisor_name=supervisor_name, department=department,
             project_type=project_type, needs_daily_review=needs_daily_review,
             client_delivery=client_delivery, high_priority=high_priority,
@@ -146,14 +126,14 @@ class DataManager:
             completion=completion, notes=notes,
         )
         self._projects_data.setdefault("projects", []).append(project.to_dict())
-        self._save_projects()
+        self._write_json(self.projects_file, self._projects_data)
         return project
 
     def update_project(self, project: Project):
         for i, p in enumerate(self._projects_data.get("projects", [])):
             if p.get("id") == project.id:
                 self._projects_data["projects"][i] = project.to_dict()
-                self._save_projects()
+                self._write_json(self.projects_file, self._projects_data)
                 return
 
     def delete_project(self, project_id: str):
@@ -161,21 +141,17 @@ class DataManager:
             p for p in self._projects_data.get("projects", [])
             if p.get("id") != project_id
         ]
-        self._save_projects()
+        self._write_json(self.projects_file, self._projects_data)
 
     # ──────────────────────────────────────────────────────────────────────
     # Task methods
     # ──────────────────────────────────────────────────────────────────────
 
-    def get_tasks_for_project(self, project_id: str) -> List[Task]:
-        project = self.get_project_by_id(project_id)
-        return project.tasks if project else []
-
     def create_task(self, project_id: str, task_name: str) -> Task:
         project = self.get_project_by_id(project_id)
         if not project:
             return None
-        task = Task(id=f"task_{uuid.uuid4().hex[:8]}", name=task_name)
+        task = Task(id=f"task_{uuid.uuid4().hex[:4]}", name=task_name)
         project.tasks.append(task)
         self.update_project(project)
         return task
@@ -198,29 +174,23 @@ class DataManager:
         self.update_project(project)
 
     # ──────────────────────────────────────────────────────────────────────
-    # Asset methods  (saved to assets/shots file)
+    # Asset methods
     # ──────────────────────────────────────────────────────────────────────
 
     def get_all_assets(self) -> List[Asset]:
         return [Asset.from_dict(a) for a in self._static_data.get("assets", [])]
 
-    def get_asset_by_id(self, asset_id: str) -> Asset:
-        for a in self._static_data.get("assets", []):
-            if a.get("id") == asset_id:
-                return Asset.from_dict(a)
-        return None
-
     def create_asset(self, name: str, asset_type: str = "model") -> Asset:
-        asset = Asset(id=f"asset_{uuid.uuid4().hex[:8]}", name=name, asset_type=asset_type)
+        asset = Asset(id=f"asset_{uuid.uuid4().hex[:4]}", name=name, asset_type=asset_type)
         self._static_data.setdefault("assets", []).append(asset.to_dict())
-        self._save_static()
+        self._write_json(self.assets_shots_file, self._static_data)
         return asset
 
     def update_asset(self, asset: Asset):
         for i, a in enumerate(self._static_data.get("assets", [])):
             if a.get("id") == asset.id:
                 self._static_data["assets"][i] = asset.to_dict()
-                self._save_static()
+                self._write_json(self.assets_shots_file, self._static_data)
                 return
 
     def delete_asset(self, asset_id: str):
@@ -228,36 +198,14 @@ class DataManager:
             a for a in self._static_data.get("assets", [])
             if a.get("id") != asset_id
         ]
-        self._save_static()
+        self._write_json(self.assets_shots_file, self._static_data)
 
     # ──────────────────────────────────────────────────────────────────────
-    # Shot methods  (saved to assets/shots file)
+    # Shot methods
     # ──────────────────────────────────────────────────────────────────────
 
     def get_all_shots(self) -> List[Shot]:
         return [Shot.from_dict(s) for s in self._static_data.get("shots", [])]
-
-    def create_shot(self, shot: str, department: str = "FX",
-                    status: str = "Pending", due_date: str = "") -> Shot:
-        new_shot = Shot(id=f"shot_{uuid.uuid4().hex[:8]}", shot=shot,
-                        department=department, status=status, due_date=due_date)
-        self._static_data.setdefault("shots", []).append(new_shot.to_dict())
-        self._save_static()
-        return new_shot
-
-    def update_shot(self, shot: Shot):
-        for i, s in enumerate(self._static_data.get("shots", [])):
-            if s.get("id") == shot.id:
-                self._static_data["shots"][i] = shot.to_dict()
-                self._save_static()
-                return
-
-    def delete_shot(self, shot_id: str):
-        self._static_data["shots"] = [
-            s for s in self._static_data.get("shots", [])
-            if s.get("id") != shot_id
-        ]
-        self._save_static()
 
     # ──────────────────────────────────────────────────────────────────────
     # Statistics
