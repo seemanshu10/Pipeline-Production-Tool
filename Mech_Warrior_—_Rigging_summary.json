@@ -1,0 +1,77 @@
+{
+  "exported_at": "2026-06-01 20:20:42",
+  "project": {
+    "id": "proj_mech_rig02",
+    "name": "Mech Warrior \u2014 Rigging",
+    "supervisor": "Arjun Mehta",
+    "department": "FX",
+    "project_type": "Animation",
+    "created_date": "2026-05-10",
+    "priority": 65,
+    "timeline_offset": 20,
+    "completion_pct": 42,
+    "flags": {
+      "high_priority": false,
+      "client_delivery": false,
+      "needs_daily_review": false
+    },
+    "notes": "Body rig approved. Focus on facial controls and facial correctives before handoff to Animation.",
+    "tasks": {
+      "total": 7,
+      "pending": 3,
+      "in_progress": 1,
+      "done": 3,
+      "items": [
+        {
+          "id": "task_m01",
+          "name": "Body rig \u2014 joint placement",
+          "status": "done",
+          "priority": "high",
+          "created_date": "2026-05-10"
+        },
+        {
+          "id": "task_m02",
+          "name": "IK/FK switching \u2014 arms",
+          "status": "done",
+          "priority": "high",
+          "created_date": "2026-05-11"
+        },
+        {
+          "id": "task_m03",
+          "name": "IK/FK switching \u2014 legs",
+          "status": "done",
+          "priority": "high",
+          "created_date": "2026-05-12"
+        },
+        {
+          "id": "task_m04",
+          "name": "Facial control rig",
+          "status": "in-progress",
+          "priority": "medium",
+          "created_date": "2026-05-14"
+        },
+        {
+          "id": "task_m05",
+          "name": "Corrective blend shapes",
+          "status": "pending",
+          "priority": "medium",
+          "created_date": "2026-05-15"
+        },
+        {
+          "id": "task_m06",
+          "name": "Skinning weight paint \u2014 full body",
+          "status": "pending",
+          "priority": "high",
+          "created_date": "2026-05-16"
+        },
+        {
+          "id": "task_m07",
+          "name": "Rig QA \u2014 animation department sign-off",
+          "status": "pending",
+          "priority": "medium",
+          "created_date": "2026-05-17"
+        }
+      ]
+    }
+  }
+}

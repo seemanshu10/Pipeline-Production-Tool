@@ -131,7 +131,7 @@
       "supervisor_name": "Leila Rashid",
       "department": "Animation",
       "project_type": "VFX",
-      "needs_daily_review": true,
+      "needs_daily_review": false,
       "client_delivery": true,
       "high_priority": true,
       "priority": 50,
@@ -242,6 +242,22 @@
           "created_date": "2026-05-24"
         }
       ]
+    },
+    {
+      "id": "proj_9f8d90e1",
+      "name": "Mechazilla",
+      "supervisor_name": "Seemanshu Verma",
+      "department": "Animation",
+      "project_type": "Animation",
+      "needs_daily_review": true,
+      "client_delivery": false,
+      "high_priority": true,
+      "priority": 50,
+      "timeline_offset": 25,
+      "completion": 0,
+      "notes": "New Test Project",
+      "created_date": "2026-06-02",
+      "tasks": []
     }
   ]
 }

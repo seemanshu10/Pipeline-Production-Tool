@@ -1,0 +1,63 @@
+{
+  "exported_at": "2026-05-29 23:24:37",
+  "project": {
+    "id": "proj_city_anim03",
+    "name": "City Chase - Animation Block",
+    "supervisor": "Leila Rashid",
+    "department": "Animation",
+    "project_type": "VFX",
+    "created_date": "2026-05-12",
+    "priority": 80,
+    "timeline_offset": 35,
+    "completion_pct": 40,
+    "flags": {
+      "high_priority": true,
+      "client_delivery": true,
+      "needs_daily_review": true
+    },
+    "notes": "Scene 07 and Scene 12 are locked. Scene 15 requires re-animation after editorial cut change. Needs dailies every morning.",
+    "tasks": {
+      "total": 5,
+      "pending": 1,
+      "in_progress": 2,
+      "done": 2,
+      "items": [
+        {
+          "id": "task_c01",
+          "name": "Scene 07 \u2014 hero run cycle",
+          "status": "done",
+          "priority": "high",
+          "created_date": "2026-05-12"
+        },
+        {
+          "id": "task_c02",
+          "name": "Scene 12 \u2014 crowd layout",
+          "status": "done",
+          "priority": "medium",
+          "created_date": "2026-05-13"
+        },
+        {
+          "id": "task_c03",
+          "name": "Scene 15 \u2014 re-animation (cut v2)",
+          "status": "in-progress",
+          "priority": "high",
+          "created_date": "2026-05-15"
+        },
+        {
+          "id": "task_c04",
+          "name": "Facial animation \u2014 lead actor",
+          "status": "in-progress",
+          "priority": "high",
+          "created_date": "2026-05-16"
+        },
+        {
+          "id": "task_c05",
+          "name": "Secondary motion \u2014 jacket, hair",
+          "status": "pending",
+          "priority": "medium",
+          "created_date": "2026-05-18"
+        }
+      ]
+    }
+  }
+}
