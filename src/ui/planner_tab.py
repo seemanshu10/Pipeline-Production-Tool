@@ -160,7 +160,7 @@ class PlannerTab(QWidget):
         self.save_btn.setEnabled(False)
         left_layout.addWidget(self.save_btn)
 
-        new_project_btn_left = QPushButton("New Project")
+        new_project_btn_left = QPushButton("Save New Project")
         new_project_btn_left.clicked.connect(self.create_project)
         left_layout.addWidget(new_project_btn_left)
 

@@ -1,6 +1,9 @@
 # VFX Pipeline Production Tool
 
-A modular PySide2 desktop application for managing VFX projects, tasks, shot tracking, and assets and full JSON persistence.
+A modular PySide2 desktop application for managing VFX projects, tasks, shot tracking, and assets with full JSON persistence.
+
+**Author:** Seemanshu Verma — pverma987@gmail.com  
+**Version:** 0.1.0
 
 ---
 
@@ -11,24 +14,35 @@ A modular PySide2 desktop application for managing VFX projects, tasks, shot tra
 - Set project **flags**: Needs Daily Review, Client Delivery, High Priority
 - **Priority slider** — auto-saves on release
 - **Timeline Offset scrollbar** — auto-saves on release
-- **Completion slider + progress bar**:
-  - Sliding to 100% marks all tasks as **Done** automatically
-  - Sliding back below 100% restores each task's previous status
+- **Completion progress bar** — read-only, auto-calculated from actual task statuses
 - **Add / Remove tasks** per project
 - **Mark Done** for individual tasks
 - **Project Notes** text area with Clear Notes action
-- **Save Changes** button for bulk field updates
+- **Save Changes** button for bulk field edits
 - Formatted task list: `ProjectName  |  Department  |  TaskName  |  status`
 
 ### Tab 2 — Assets
-- **Published Assets** panel — lists all assets stored in JSON
-- **Shot Tracking** table — Shot, Department, Status, Due Date; fully persisted in JSON alongside projects and assets
+- **Published Assets** panel — lists all assets stored in `production.json`
+- **Shot Tracking** table — Shot, Department, Status, Due Date; seeded with 7 default shots and persisted in `production.json`
 - **Department Hierarchy** tree — Pipeline department / sub-group / role structure
   - Toggle button to **Collapse All / Expand All** the entire tree
 
 ### Tab 3 — Summary
-- Live statistics: total projects, tasks by status (pending / in-progress / done), total assets
-- **Export Summary as JSON** — saves a full snapshot of projects, tasks, assets, and statistics to a user-chosen file
+Two collapsible sections:
+
+**Project Summary**
+- Per-project details: name, supervisor, department, type, created date
+- Priority, Completion, and Timeline Offset progress bars
+- Task breakdown: total, pending, in-progress, done
+- Active flags display
+- **Export Project Summary as JSON**
+
+**Studio Summary**
+- Studio-wide totals: projects, tasks by status, assets
+- Breakdown by project type (VFX / Animation / Gaming) and department
+- Studio-wide flag counts
+- Overall studio completion bar
+- **Export Studio Summary as JSON**
 
 ### Menu Bar
 | Menu | Action | Shortcut |
@@ -40,7 +54,7 @@ A modular PySide2 desktop application for managing VFX projects, tasks, shot tra
 | Help | About | F1 |
 
 ### UI Theme
-Dark ink-wash palette applied via `resources/style.qss` — charcoal black, cool gray, and soft ivory for a gallery-like, high-contrast feel.
+Dark ink-wash palette applied via `src/resources/style.qss` — charcoal black, cool gray, and soft ivory for a high-contrast, gallery-like feel.
 
 ---
 
@@ -51,21 +65,22 @@ Pipeline-Production-Tool/
 ├── main.py                        # Entry point
 ├── requirements.txt               # Python dependencies
 ├── README.md
-├── resources/
-│   └── style.qss                  # App-wide dark ink-wash stylesheet
-├── data/
-│   └── pipeline_data.json         # Persistent JSON storage (auto-created)
 └── src/
     ├── app.py                     # App init — loads stylesheet, launches window
+    ├── constants.py               # All app-wide constants (paths, defaults, domain lists)
     ├── data_manager.py            # JSON persistence layer (projects, tasks, assets, shots)
+    ├── data/
+    │   ├── Project.json           # Persistent project + task storage
+    │   └── production.json        # Persistent asset + shot storage
     ├── models/
-    │   ├── data_models.py         # Dataclasses: Project, Task, Asset, Shot
-    │   └── asset_models.py        # Qt models: AssetListModel, ShotTableModel, DEPARTMENT_TREE
+    │   └── data_models.py         # Dataclasses: Project, Task, Asset, Shot
+    ├── resources/
+    │   └── style.qss              # App-wide dark ink-wash stylesheet
     └── ui/
         ├── main_window.py         # Main window — tab widget, menu bar, file I/O
         ├── planner_tab.py         # Tab 1 — project/task management
         ├── assets_tab.py          # Tab 2 — assets, shot tracking, dept hierarchy
-        └── summary_tab.py         # Tab 3 — statistics, export
+        └── summary_tab.py         # Tab 3 — per-project and studio-wide statistics
 ```
 
 ---
@@ -103,13 +118,21 @@ python main.py
 
 ## Data Storage
 
-All data is stored in `data/pipeline_data.json`, created automatically on first run. Shot tracking is seeded with 7 default shots on first launch; any edits persist across restarts.
+Data is split across two JSON files inside `src/data/`, both created automatically on first run.
 
+| File | Contents |
+|------|----------|
+| `src/data/Project.json` | All projects and their tasks |
+| `src/data/production.json` | All assets and shots |
+
+Shot tracking is seeded with 7 default shots on first launch; any edits persist across restarts.
+
+### Project.json structure
 ```json
 {
   "projects": [
     {
-      "id": "proj_abc12345",
+      "id": "proj_abc1",
       "name": "Dragon FX",
       "supervisor_name": "Jane Smith",
       "department": "FX",
@@ -119,7 +142,7 @@ All data is stored in `data/pipeline_data.json`, created automatically on first 
       "high_priority": true,
       "priority": 80,
       "timeline_offset": 30,
-      "completion": 60,
+      "completion": 0,
       "notes": "Client review on Friday.",
       "created_date": "2026-05-28",
       "tasks": [
@@ -132,7 +155,13 @@ All data is stored in `data/pipeline_data.json`, created automatically on first 
         }
       ]
     }
-  ],
+  ]
+}
+```
+
+### production.json structure
+```json
+{
   "assets": [
     {
       "id": "asset_001",
@@ -169,26 +198,28 @@ All data is stored in `data/pipeline_data.json`, created automatically on first 
 ### Planner Tab
 
 1. Fill in project details on the left panel and click **New Project** to create one.
-2. Select a project from the **Projects** list to load its details and tasks.
+2. Select a project from the **Projects** list on the right to load its details.
 3. Use **Add Task** / **Remove Task** to manage the task queue.
-4. Click **Mark Done** to complete a selected task individually.
-5. Drag the **Completion** slider to 100 to mark all tasks done at once; drag back below 100 to restore their previous statuses.
-6. Click **Save Changes** to persist any form edits (name, department, flags, notes).
+4. Click **Mark Done** to complete a selected task — the Completion bar updates automatically.
+5. Click **Save Changes** to persist any form edits (name, department, flags, notes).
+6. **File → New Project (Ctrl+N)** clears the form ready for a fresh entry.
 
 ### Assets Tab
 
-- The **Published Assets** panel reflects assets in `pipeline_data.json`.
-- The **Shot Tracking** table is fully persisted — any changes written back to JSON are reflected immediately on tab switch.
+- The **Published Assets** panel reflects assets in `production.json`.
+- The **Shot Tracking** table is read from `production.json` and refreshes on tab switch.
 - Use the **Collapse All / Expand All** toggle to navigate the Department Hierarchy tree.
 
 ### Summary Tab
 
-- Statistics update whenever you switch to this tab.
-- Click **Export Summary as JSON** to save a full pipeline snapshot for reporting or handoff.
+- Both sections collapse/expand via their header buttons.
+- Select a project from the dropdown to view its per-project stats.
+- Statistics update every time you switch to this tab.
+- Use the export buttons to save JSON snapshots for reporting or handoff.
 
 ### File Menu
 
-- **Open Project (Ctrl+O)** — loads any `pipeline_data.json` file and replaces the current session.
+- **Open Project (Ctrl+O)** — loads any `Project.json` file and replaces the current session.
 - **Save Project (Ctrl+S)** — writes the current session to a new JSON file of your choice.
 
 ---
@@ -199,4 +230,4 @@ All data is stored in `data/pipeline_data.json`, created automatically on first 
 |---------|---------|
 | PySide2 | 5.15.13 |
 
-Python standard library only beyond PySide2 (`json`, `uuid`, `datetime`, `pathlib`).
+Python standard library only beyond PySide2 (`json`, `uuid`, `datetime`, `pathlib`, `os`).
