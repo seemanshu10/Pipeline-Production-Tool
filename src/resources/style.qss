@@ -425,7 +425,6 @@ QListWidget::item {
     padding: 7px 11px;
     border-radius: 5px;
     min-height: 22px;
-    color: #d4cfc6;
 }
 QListWidget::item:selected {
     background-color: #363a48;

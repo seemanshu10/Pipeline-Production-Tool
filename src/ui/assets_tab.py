@@ -7,6 +7,7 @@ from PySide2.QtWidgets import (
     QHeaderView, QAbstractItemView, QPushButton
 )
 from PySide2.QtCore import Qt
+from PySide2.QtGui import QColor
 
 from src.data_manager import DataManager
 from src.constants import SHOT_HEADERS, DEPARTMENT_TREE
@@ -149,3 +150,9 @@ class AssetsTab(QWidget):
             self.shot_table.setItem(row, 1, QTableWidgetItem(shot.department))
             self.shot_table.setItem(row, 2, QTableWidgetItem(shot.status))
             self.shot_table.setItem(row, 3, QTableWidgetItem(shot.due_date))
+            bg = QColor("#2d6a2d") if shot.status.lower() == "done" else QColor("#6a2d2d")
+            fg = QColor("#c8f0c8") if shot.status.lower() == "done" else QColor("#f0c8c8")
+            for col in range(4):
+                item = self.shot_table.item(row, col)
+                item.setBackground(bg)
+                item.setForeground(fg)

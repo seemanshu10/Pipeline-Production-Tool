@@ -2,7 +2,7 @@
 
 A modular PySide2 desktop application for managing VFX projects, tasks, shot tracking, and assets with full JSON persistence.
 
-**Author:** Seemanshu Verma — pverma987@gmail.com  
+**Author:** Seemanshu Verma  
 **Version:** 0.1.0
 
 ---
@@ -96,7 +96,7 @@ Pipeline-Production-Tool/
 
 ```bash
 # 1. Clone the repository
-git clone <repo-url>
+git clone https://github.com/seemanshu10/Pipeline-Production-Tool.git
 cd Pipeline-Production-Tool
 
 # 2. Create and activate a virtual environment

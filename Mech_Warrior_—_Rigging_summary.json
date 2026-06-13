@@ -1,75 +1,68 @@
 {
-  "exported_at": "2026-06-01 20:20:42",
+  "exported_at": "2026-06-04 22:01:04",
   "project": {
-    "id": "proj_mech_rig02",
-    "name": "Mech Warrior \u2014 Rigging",
-    "supervisor": "Arjun Mehta",
+    "id": "proj_dragon_fx01",
+    "name": "Dragon FX - Sequence 04",
+    "supervisor": "Priya Nair",
     "department": "FX",
-    "project_type": "Animation",
-    "created_date": "2026-05-10",
-    "priority": 65,
-    "timeline_offset": 20,
-    "completion_pct": 42,
+    "project_type": "VFX",
+    "created_date": "2026-05-01",
+    "priority": 90,
+    "timeline_offset": 45,
+    "completion_pct": 50,
     "flags": {
-      "high_priority": false,
-      "client_delivery": false,
-      "needs_daily_review": false
+      "high_priority": true,
+      "client_delivery": true,
+      "needs_daily_review": true
     },
-    "notes": "Body rig approved. Focus on facial controls and facial correctives before handoff to Animation.",
+    "notes": "Client delivery deadline end of June. Fire and smoke sims need to match director's reference reel from pre-viz.",
     "tasks": {
-      "total": 7,
-      "pending": 3,
+      "total": 6,
+      "pending": 2,
       "in_progress": 1,
       "done": 3,
       "items": [
         {
-          "id": "task_m01",
-          "name": "Body rig \u2014 joint placement",
+          "id": "task_d01",
+          "name": "Fire simulation \u2014 wide shot",
           "status": "done",
           "priority": "high",
-          "created_date": "2026-05-10"
+          "created_date": "2026-05-01"
         },
         {
-          "id": "task_m02",
-          "name": "IK/FK switching \u2014 arms",
+          "id": "task_d02",
+          "name": "Smoke trail \u2014 hero dragon",
           "status": "done",
           "priority": "high",
-          "created_date": "2026-05-11"
+          "created_date": "2026-05-02"
         },
         {
-          "id": "task_m03",
-          "name": "IK/FK switching \u2014 legs",
+          "id": "task_d03",
+          "name": "Secondary debris pass",
           "status": "done",
           "priority": "high",
-          "created_date": "2026-05-12"
+          "created_date": "2026-05-05"
         },
         {
-          "id": "task_m04",
-          "name": "Facial control rig",
+          "id": "task_d04",
+          "name": "Ground impact dust sim",
           "status": "in-progress",
           "priority": "medium",
-          "created_date": "2026-05-14"
+          "created_date": "2026-05-06"
         },
         {
-          "id": "task_m05",
-          "name": "Corrective blend shapes",
-          "status": "pending",
-          "priority": "medium",
-          "created_date": "2026-05-15"
-        },
-        {
-          "id": "task_m06",
-          "name": "Skinning weight paint \u2014 full body",
+          "id": "task_d05",
+          "name": "Render \u2014 FX passes",
           "status": "pending",
           "priority": "high",
-          "created_date": "2026-05-16"
+          "created_date": "2026-05-07"
         },
         {
-          "id": "task_m07",
-          "name": "Rig QA \u2014 animation department sign-off",
+          "id": "task_d06",
+          "name": "Comp integration review",
           "status": "pending",
           "priority": "medium",
-          "created_date": "2026-05-17"
+          "created_date": "2026-05-08"
         }
       ]
     }

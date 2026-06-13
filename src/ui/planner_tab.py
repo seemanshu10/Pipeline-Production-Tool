@@ -8,6 +8,7 @@ from PySide2.QtWidgets import (
     QTextEdit, QGridLayout
 )
 from PySide2.QtCore import Qt
+from PySide2.QtGui import QColor
 
 from src.data_manager import DataManager
 from src.constants import DEPARTMENTS, DEFAULT_PRIORITY, DEFAULT_TIMELINE_OFFSET
@@ -248,6 +249,12 @@ class PlannerTab(QWidget):
             )
             item = QListWidgetItem(item_text)
             item.setData(Qt.UserRole, task.id)
+            if task.status.lower() == "done":
+                item.setBackground(QColor("#2d6a2d"))
+                item.setForeground(QColor("#c8f0c8"))
+            else:
+                item.setBackground(QColor("#6a2d2d"))
+                item.setForeground(QColor("#f0c8c8"))
             self.tasks_list.addItem(item)
 
         self._update_completion_bar()
