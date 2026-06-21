@@ -44,17 +44,18 @@ Two collapsible sections:
 - Overall studio completion bar
 - **Export Studio Summary as JSON**
 
-### Menu Bar
-| Menu | Action | Shortcut |
-|------|--------|----------|
-| File | New Project | Ctrl+N |
-| File | Open Project… | Ctrl+O |
-| File | Save Project… | Ctrl+S |
-| File | Exit | Ctrl+Q |
-| Help | About | F1 |
+---
 
-### UI Theme
-Dark ink-wash palette applied via `src/resources/style.qss` — charcoal black, cool gray, and soft ivory for a high-contrast, gallery-like feel.
+## GIF Walkthrough
+
+### Planner Tab
+![Planner Tab](gifs/planner_tab.gif)
+
+### Assets Tab
+![Assets Tab](gifs/Assets_tab.gif)
+
+### Summary Tab
+![Summary Tab](gifs/Summary_tab.gif)
 
 ---
 
@@ -186,7 +187,7 @@ Shot tracking is seeded with 7 default shots on first launch; any edits persist 
 `pending` · `in-progress` · `done`
 
 ### Asset types
-`model` · `texture` · `animation` · *(any custom string)*
+`model` · `texture` · `animation` 
 
 ### Shot statuses
 `Pending` · `In Progress` · `Done`

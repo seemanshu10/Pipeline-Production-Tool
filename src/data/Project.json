@@ -183,8 +183,8 @@
       "supervisor_name": "Tariq Okonkwo",
       "department": "Assets",
       "project_type": "Gaming",
-      "needs_daily_review": false,
-      "client_delivery": false,
+      "needs_daily_review": true,
+      "client_delivery": true,
       "high_priority": false,
       "priority": 50,
       "timeline_offset": 10,
@@ -285,6 +285,30 @@
           "status": "pending",
           "priority": "medium",
           "created_date": "2026-06-02"
+        }
+      ]
+    },
+    {
+      "id": "proj_4b08",
+      "name": "New Project",
+      "supervisor_name": "Seemanshu",
+      "department": "Animation",
+      "project_type": "Gaming",
+      "needs_daily_review": true,
+      "client_delivery": false,
+      "high_priority": true,
+      "priority": 50,
+      "timeline_offset": 56,
+      "completion": 0,
+      "notes": "",
+      "created_date": "2026-06-20",
+      "tasks": [
+        {
+          "id": "task_cbdf",
+          "name": "New Task",
+          "status": "done",
+          "priority": "medium",
+          "created_date": "2026-06-20"
         }
       ]
     }

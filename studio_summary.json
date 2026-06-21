@@ -1,0 +1,111 @@
+{
+  "exported_at": "2026-06-21 13:47:12",
+  "statistics": {
+    "total_projects": 6,
+    "total_tasks": 30,
+    "pending_tasks": 13,
+    "completed_tasks": 13,
+    "in_progress_tasks": 4,
+    "total_assets": 2
+  },
+  "breakdown": {
+    "by_type": {
+      "VFX": 2,
+      "Animation": 2,
+      "Gaming": 2
+    },
+    "by_department": {
+      "Rig": 0,
+      "FX": 2,
+      "Animation": 3,
+      "Assets": 1
+    },
+    "flags": {
+      "high_priority": 4,
+      "client_delivery": 3,
+      "needs_daily_review": 4
+    }
+  },
+  "projects": [
+    {
+      "id": "proj_dragon_fx01",
+      "name": "Dragon FX - Sequence 04",
+      "supervisor": "Priya Nair",
+      "department": "FX",
+      "project_type": "VFX",
+      "priority": 90,
+      "created_date": "2026-05-01",
+      "task_count": 6,
+      "tasks_done": 3
+    },
+    {
+      "id": "proj_mech_rig02",
+      "name": "Mech Warrior \u2014 Rigging",
+      "supervisor": "Arjun Mehta",
+      "department": "FX",
+      "project_type": "Animation",
+      "priority": 65,
+      "created_date": "2026-05-10",
+      "task_count": 7,
+      "tasks_done": 3
+    },
+    {
+      "id": "proj_city_anim03",
+      "name": "City Chase - Animation Block",
+      "supervisor": "Leila Rashid",
+      "department": "Animation",
+      "project_type": "VFX",
+      "priority": 50,
+      "created_date": "2026-05-12",
+      "task_count": 5,
+      "tasks_done": 2
+    },
+    {
+      "id": "proj_env_assets04",
+      "name": "Neon City - Environment Assets",
+      "supervisor": "Tariq Okonkwo",
+      "department": "Assets",
+      "project_type": "Gaming",
+      "priority": 50,
+      "created_date": "2026-05-18",
+      "task_count": 7,
+      "tasks_done": 4
+    },
+    {
+      "id": "proj_9f8d90e1",
+      "name": "Mechazilla",
+      "supervisor": "Seemanshu Verma",
+      "department": "Animation",
+      "project_type": "Animation",
+      "priority": 50,
+      "created_date": "2026-06-02",
+      "task_count": 4,
+      "tasks_done": 0
+    },
+    {
+      "id": "proj_4b08",
+      "name": "New Project",
+      "supervisor": "Seemanshu",
+      "department": "Animation",
+      "project_type": "Gaming",
+      "priority": 50,
+      "created_date": "2026-06-20",
+      "task_count": 1,
+      "tasks_done": 1
+    }
+  ],
+  "assets": [
+    {
+      "id": "asset_d8afb29d",
+      "name": "Tower",
+      "type": "texture",
+      "created_date": "2026-05-28"
+    },
+    {
+      "id": "asset_b382c240",
+      "name": "ASSet",
+      "type": "model",
+      "created_date": "2026-05-28"
+    }
+  ]
+}

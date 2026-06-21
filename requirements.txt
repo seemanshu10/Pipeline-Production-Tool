@@ -1,1 +1,2 @@
+# Project external dependencies
 PySide2==5.15.13
